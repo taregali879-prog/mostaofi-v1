@@ -21,3 +21,18 @@ The sandbox has Node.js but no Docker and npm registry access timed out. Therefo
 
 ## Test Ready gate
 Version is **Implementation Ready / E2E Pending**, not yet certified Test Ready. Certification requires CI to pass: install -> Prisma generate -> migrations -> seed -> E2E -> build.
+
+## v0.3.0 — Test Ready closure + BOQ Versioning & Approval
+
+Implemented:
+- BOQ / BOQVersion / BOQItem persistence model and SQL migration.
+- BOQ lifecycle: DRAFT → SUBMITTED → APPROVED/REJECTED; prior approved version becomes SUPERSEDED on later approval.
+- Approved/rejected BOQ can create a new DRAFT version copied from the previous version; approved versions are not edited in place.
+- RBAC: authoring roles create/edit/submit; ORG_ADMIN approves/rejects.
+- Audit events for create, item add, submit, approve, reject, and version creation.
+- Fixed missing `DocumentsService.addVersionIntent` implementation referenced by the controller.
+- Added BOQ contract tests and Test Ready preflight check.
+
+Remaining external execution gate:
+- `package-lock.json` cannot be generated in this execution environment because npm registry access timed out. Therefore `npm ci`, Nest/Next compilation, Prisma generation/migration, and HTTP E2E cannot truthfully be marked PASS here.
+- On a networked runner: run `npm install`, commit `package-lock.json`, then run CI with PostgreSQL + object storage. Test Ready is achieved only when the CI E2E and build jobs pass.

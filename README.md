@@ -34,5 +34,9 @@ npm run test:local
 - Audit events immutable على العمليات الحساسة.
 - CI يمنع الدمج عند فشل الاختبارات الأساسية.
 
-## v0.2.0 execution slice
+## v0.3.0 execution slice
 The API now uses PostgreSQL/Prisma persistence, JWT access/refresh tokens with RBAC, S3-compatible presigned document uploads, and persisted audit events. See `docs/EXECUTION_STATUS.md` for the exact verification status and `apps/api/test/vertical-slice.e2e-spec.ts` for the definitive E2E path.
+
+
+## v0.3.0
+BOQ Versioning & Approval implemented. Test Ready preflight passes for repository/contracts; full HTTP/DB E2E remains gated by dependency installation and CI execution.

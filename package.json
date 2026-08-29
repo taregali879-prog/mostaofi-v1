@@ -1,7 +1,7 @@
 {
   "name": "muqawil-partner-platform",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -16,7 +16,8 @@
     "build": "npm --workspace packages/contracts run build && npm --workspace apps/api run build && npm --workspace apps/web run build",
     "db:generate": "npm --workspace apps/api run prisma:generate",
     "db:migrate": "npm --workspace apps/api run prisma:migrate",
-    "test:e2e": "npm --workspace apps/api run test:e2e"
+    "test:e2e": "npm --workspace apps/api run test:e2e",
+    "test:readiness": "node scripts/test-ready-check.mjs"
   },
   "engines": {
     "node": ">=22"

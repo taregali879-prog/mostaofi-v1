@@ -15,5 +15,11 @@ describe('Vertical Slice E2E',()=>{
   await request(app.getHttpServer()).post(`/api/v1/documents/${i.body.documentId}/complete`).set('Authorization',`Bearer ${token}`).send({version:1,sha256:'a'.repeat(64)}).expect(201);
   const a=await request(app.getHttpServer()).get(`/api/v1/projects/${projectId}/activity`).set('Authorization',`Bearer ${token}`).expect(200);
   expect(a.body.map((x:any)=>x.event)).toEqual(expect.arrayContaining(['PROJECT_CREATED','DOCUMENT_UPLOADED']));
+  const boq=await request(app.getHttpServer()).post(`/api/v1/projects/${projectId}/boqs`).set('Authorization',`Bearer ${token}`).send({title:'BOQ Fire Systems'}).expect(201);
+  await request(app.getHttpServer()).post(`/api/v1/boqs/${boq.body.id}/versions/1/items`).set('Authorization',`Bearer ${token}`).send({lineNo:1,description:'Fire sprinkler',unit:'EA',quantity:10,unitPrice:25}).expect(201);
+  await request(app.getHttpServer()).post(`/api/v1/boqs/${boq.body.id}/versions/1/submit`).set('Authorization',`Bearer ${token}`).expect(201);
+  await request(app.getHttpServer()).post(`/api/v1/boqs/${boq.body.id}/versions/1/approve`).set('Authorization',`Bearer ${token}`).expect(201);
+  const a2=await request(app.getHttpServer()).get(`/api/v1/projects/${projectId}/activity`).set('Authorization',`Bearer ${token}`).expect(200);
+  expect(a2.body.map((x:any)=>x.event)).toEqual(expect.arrayContaining(['BOQ_CREATED','BOQ_SUBMITTED','BOQ_APPROVED']));
  });
 });

@@ -15,3 +15,8 @@ Login → Contractor Profile → Project → Dashboard → Documents → Audit T
 - AuthService الحالي يحتوي credentials تطويرية ثابتة لإثبات الـSlice فقط؛ يجب استبداله بمزود هوية/JWT حقيقي قبل Staging.
 - Services الحالية تستخدم in-memory storage في Adapter الأولي؛ Schema/Migration PostgreSQL مرفقة، ويجب توصيل Repository layer بقاعدة البيانات في المهمة التالية.
 - Document module يولد storageKey وhash ولكنه لا يرفع bytes إلى S3 بعد؛ Signed URL adapter هو المهمة التالية.
+
+## BOQ Vertical Slice (v0.3)
+Project → Create BOQ V1 → Add Items → Submit → ORG_ADMIN Approve/Reject → immutable approved version → Create V2 from closed version → Audit.
+
+Acceptance rule: APPROVED versions are never edited in place. A change creates a new DRAFT version and preserves the prior approved snapshot.

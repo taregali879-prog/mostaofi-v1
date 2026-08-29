@@ -32,6 +32,14 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum BoqStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
 model User {
   id           String       @id @db.Uuid
   email        String       @unique
@@ -66,6 +74,7 @@ model Organization {
   contractorProfile ContractorProfile?
   projects          Project[]
   documents         Document[]
+  boqs              Boq[]
   auditEvents       AuditEvent[]
   @@map("organizations")
 }
@@ -114,6 +123,7 @@ model Project {
   updatedAt         DateTime      @updatedAt @map("updated_at")
   organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   documents         Document[]
+  boqs              Boq[]
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
   @@map("projects")
@@ -167,4 +177,56 @@ model AuditEvent {
   @@index([organizationId, entityType, entityId, occurredAt])
   @@index([requestId])
   @@map("audit_events")
+}
+
+model Boq {
+  id             String    @id @db.Uuid
+  organizationId String    @db.Uuid @map("organization_id")
+  projectId      String    @db.Uuid @map("project_id")
+  title          String
+  currentVersion Int       @default(1) @map("current_version")
+  status         BoqStatus @default(DRAFT)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  versions       BoqVersion[]
+  @@index([organizationId, projectId])
+  @@map("boqs")
+}
+
+model BoqVersion {
+  id           String    @id @db.Uuid
+  boqId        String    @db.Uuid @map("boq_id")
+  version      Int
+  status       BoqStatus @default(DRAFT)
+  changeReason String?   @map("change_reason")
+  submittedAt  DateTime? @map("submitted_at")
+  approvedAt   DateTime? @map("approved_at")
+  approvedBy   String?   @db.Uuid @map("approved_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  boq          Boq       @relation(fields: [boqId], references: [id], onDelete: Restrict)
+  items        BoqItem[]
+  @@unique([boqId, version])
+  @@map("boq_versions")
+}
+
+model BoqItem {
+  id          String   @id @db.Uuid
+  versionId   String   @db.Uuid @map("version_id")
+  lineNo      Int      @map("line_no")
+  itemCode    String?  @map("item_code")
+  description String
+  category    String?
+  manufacturer String?
+  model       String?
+  unit        String
+  quantity    Decimal  @db.Decimal(14,3)
+  unitPrice   Decimal? @db.Decimal(14,2) @map("unit_price")
+  specification String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  version     BoqVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  @@unique([versionId, lineNo])
+  @@index([versionId])
+  @@map("boq_items")
 }
