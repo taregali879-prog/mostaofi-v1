@@ -10,3 +10,9 @@ ON CONFLICT DO NOTHING;
 INSERT INTO contractor_profiles (id,organization_id,legal_name,commercial_registration_no,city,phone,status) VALUES
 ('01900000-0000-7000-8000-000000000201','01900000-0000-7000-8000-000000000101','مؤسسة المقاول الشريك التجريبية','1010101010','جازان','0500000000','DRAFT')
 ON CONFLICT DO NOTHING;
+INSERT INTO warehouses (id,organization_id,name,city) VALUES
+('01900000-0000-7000-8000-000000000301','01900000-0000-7000-8000-000000000101','المستودع الرئيسي','جازان')
+ON CONFLICT DO NOTHING;
+INSERT INTO suppliers (id,organization_id,name,tax_number,email,phone) VALUES
+('01900000-0000-7000-8000-000000000401','01900000-0000-7000-8000-000000000101','مورد تجريبي','310000000000003','supplier@example.test','0500000001')
+ON CONFLICT DO NOTHING;

@@ -17,13 +17,6 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U muqawil -d muqawil_partner"
           --health-interval 5s --health-timeout 5s --health-retries 10
-      minio:
-        image: minio/minio:latest
-        env:
-          MINIO_ROOT_USER: muqawil
-          MINIO_ROOT_PASSWORD: change-me
-        ports: ['9000:9000']
-        options: --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://muqawil:muqawil@localhost:5432/muqawil_partner
       S3_ENDPOINT: http://localhost:9000
@@ -33,12 +26,19 @@ jobs:
       S3_SECRET_KEY: change-me
       JWT_ACCESS_SECRET: ci-access-secret-change-me
       JWT_REFRESH_SECRET: ci-refresh-secret-change-me
+      PORT: 4000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - name: Start MinIO
+        run: docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=muqawil -e MINIO_ROOT_PASSWORD=change-me minio/minio:latest server /data
+      - name: Wait for MinIO and create bucket
+        run: |
+          for i in {1..30}; do curl -fsS http://127.0.0.1:9000/minio/health/live && break || sleep 2; done
+          docker run --rm --network host --entrypoint /bin/sh minio/mc -c "mc alias set local http://127.0.0.1:9000 muqawil change-me && mc mb --ignore-existing local/muqawil-documents"
       - run: npm ci
       - run: npm run test:local
       - run: npm run db:generate
@@ -46,3 +46,15 @@ jobs:
       - run: psql "$DATABASE_URL" -f database/seed.sql
       - run: npm run test:e2e
       - run: npm run build
+      - name: API performance smoke
+        run: |
+          node apps/api/dist/main.js > /tmp/muqawil-api.log 2>&1 & echo $! > /tmp/api.pid
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4000/api/v1/health/ready && break || sleep 2; done
+          npm run perf:smoke
+          kill $(cat /tmp/api.pid)
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-server-log
+          path: /tmp/muqawil-api.log

@@ -8,9 +8,14 @@ import { ProjectsModule } from './projects/projects.module';
 import { DocumentsModule } from './documents/documents.module';
 import { AuditModule } from './audit/audit.module';
 import { BoqModule } from './boq/boq.module';
+import { ProcurementModule } from './procurement/procurement.module';
+import { DeliveryModule } from './delivery/delivery.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { KpiModule } from './kpi/kpi.module';
+import { SystemModule } from './system/system.module';
 import { JwtAuthGuard } from './security/jwt-auth.guard';
 import { RolesGuard } from './security/roles.guard';
 @Module({
- imports:[DatabaseModule,StorageModule,AuditModule,AuthModule,ContractorsModule,ProjectsModule,DocumentsModule,BoqModule],
+ imports:[DatabaseModule,StorageModule,AuditModule,AuthModule,ContractorsModule,ProjectsModule,DocumentsModule,BoqModule,ProcurementModule,DeliveryModule,InventoryModule,KpiModule,SystemModule],
  providers:[{provide:APP_GUARD,useClass:JwtAuthGuard},{provide:APP_GUARD,useClass:RolesGuard}],
 }) export class AppModule{}

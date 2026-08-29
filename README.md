@@ -40,3 +40,6 @@ The API now uses PostgreSQL/Prisma persistence, JWT access/refresh tokens with R
 
 ## v0.3.0
 BOQ Versioning & Approval implemented. Test Ready preflight passes for repository/contracts; full HTTP/DB E2E remains gated by dependency installation and CI execution.
+
+## v0.5.0-rc1
+Implements the S4–S8 MVP backend baseline (Procurement, PO, Delivery, Inventory and Material KPI), full E2E specification, CI gate, pilot console and verification evidence. The release remains RC/BLOCKED until package-lock generation and full PostgreSQL/MinIO CI pass on a network-enabled runner.
