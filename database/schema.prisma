@@ -230,3 +230,164 @@ model BoqItem {
   @@index([versionId])
   @@map("boq_items")
 }
+
+enum ProcurementStatus { DRAFT SUBMITTED APPROVED REJECTED CLOSED }
+enum RfqStatus { DRAFT ISSUED CLOSED AWARDED CANCELLED }
+enum SupplierQuoteStatus { DRAFT SUBMITTED SELECTED REJECTED }
+enum PurchaseOrderStatus { DRAFT APPROVED PARTIALLY_DELIVERED FULLY_DELIVERED CLOSED CANCELLED }
+enum DeliveryStatus { EXPECTED ARRIVED UNDER_INSPECTION PARTIALLY_ACCEPTED ACCEPTED REJECTED }
+enum InventoryMovementType { PURCHASE_RECEIPT PROJECT_ALLOCATION PROJECT_ISSUE PROJECT_RETURN SUPPLIER_RETURN WAREHOUSE_TRANSFER ADJUSTMENT }
+
+model Supplier {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  name String
+  taxNumber String? @map("tax_number")
+  email String?
+  phone String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([organizationId, name])
+  @@map("suppliers")
+}
+model MaterialRequirement {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  projectId String @db.Uuid @map("project_id")
+  boqVersionId String @db.Uuid @map("boq_version_id")
+  status ProcurementStatus @default(DRAFT)
+  requestedBy String? @db.Uuid @map("requested_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  items MaterialRequirementItem[]
+  rfqs Rfq[]
+  @@index([organizationId, projectId])
+  @@map("material_requirements")
+}
+model MaterialRequirementItem {
+  id String @id @db.Uuid
+  materialRequirementId String @db.Uuid @map("material_requirement_id")
+  boqItemId String @db.Uuid @map("boq_item_id")
+  quantity Decimal @db.Decimal(14,3)
+  requirement MaterialRequirement @relation(fields:[materialRequirementId], references:[id], onDelete:Restrict)
+  @@unique([materialRequirementId, boqItemId])
+  @@map("material_requirement_items")
+}
+model Rfq {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  projectId String @db.Uuid @map("project_id")
+  materialRequirementId String @db.Uuid @map("material_requirement_id")
+  status RfqStatus @default(DRAFT)
+  dueAt DateTime? @map("due_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  requirement MaterialRequirement @relation(fields:[materialRequirementId], references:[id], onDelete:Restrict)
+  quotes SupplierQuote[]
+  @@index([organizationId, projectId])
+  @@map("rfqs")
+}
+model SupplierQuote {
+  id String @id @db.Uuid
+  rfqId String @db.Uuid @map("rfq_id")
+  supplierId String @db.Uuid @map("supplier_id")
+  status SupplierQuoteStatus @default(DRAFT)
+  currency String @default("SAR")
+  leadTimeDays Int? @map("lead_time_days")
+  paymentTerms String? @map("payment_terms")
+  submittedAt DateTime? @map("submitted_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  rfq Rfq @relation(fields:[rfqId], references:[id], onDelete:Restrict)
+  items SupplierQuoteItem[]
+  @@unique([rfqId, supplierId])
+  @@map("supplier_quotes")
+}
+model SupplierQuoteItem {
+  id String @id @db.Uuid
+  supplierQuoteId String @db.Uuid @map("supplier_quote_id")
+  boqItemId String @db.Uuid @map("boq_item_id")
+  quantity Decimal @db.Decimal(14,3)
+  unitPrice Decimal @db.Decimal(14,2) @map("unit_price")
+  availableQty Decimal? @db.Decimal(14,3) @map("available_qty")
+  quote SupplierQuote @relation(fields:[supplierQuoteId], references:[id], onDelete:Restrict)
+  @@unique([supplierQuoteId, boqItemId])
+  @@map("supplier_quote_items")
+}
+model PurchaseOrder {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  projectId String @db.Uuid @map("project_id")
+  supplierId String @db.Uuid @map("supplier_id")
+  supplierQuoteId String? @db.Uuid @map("supplier_quote_id")
+  poNumber String @map("po_number")
+  status PurchaseOrderStatus @default(DRAFT)
+  approvedAt DateTime? @map("approved_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  items PurchaseOrderItem[]
+  deliveries Delivery[]
+  @@unique([organizationId, poNumber])
+  @@index([organizationId, projectId, status])
+  @@map("purchase_orders")
+}
+model PurchaseOrderItem {
+  id String @id @db.Uuid
+  purchaseOrderId String @db.Uuid @map("purchase_order_id")
+  boqItemId String? @db.Uuid @map("boq_item_id")
+  description String
+  unit String
+  quantity Decimal @db.Decimal(14,3)
+  unitPrice Decimal @db.Decimal(14,2) @map("unit_price")
+  purchaseOrder PurchaseOrder @relation(fields:[purchaseOrderId], references:[id], onDelete:Restrict)
+  deliveryItems DeliveryItem[]
+  @@map("purchase_order_items")
+}
+model Delivery {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  projectId String @db.Uuid @map("project_id")
+  purchaseOrderId String @db.Uuid @map("purchase_order_id")
+  deliveryNumber String @map("delivery_number")
+  status DeliveryStatus @default(EXPECTED)
+  arrivedAt DateTime? @map("arrived_at")
+  receivedAt DateTime? @map("received_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  purchaseOrder PurchaseOrder @relation(fields:[purchaseOrderId], references:[id], onDelete:Restrict)
+  items DeliveryItem[]
+  @@unique([organizationId, deliveryNumber])
+  @@map("deliveries")
+}
+model DeliveryItem {
+  id String @id @db.Uuid
+  deliveryId String @db.Uuid @map("delivery_id")
+  purchaseOrderItemId String @db.Uuid @map("purchase_order_item_id")
+  arrivedQty Decimal @db.Decimal(14,3) @map("arrived_qty")
+  acceptedQty Decimal @default(0) @db.Decimal(14,3) @map("accepted_qty")
+  rejectedQty Decimal @default(0) @db.Decimal(14,3) @map("rejected_qty")
+  damagedQty Decimal @default(0) @db.Decimal(14,3) @map("damaged_qty")
+  delivery Delivery @relation(fields:[deliveryId], references:[id], onDelete:Restrict)
+  purchaseOrderItem PurchaseOrderItem @relation(fields:[purchaseOrderItemId], references:[id], onDelete:Restrict)
+  @@unique([deliveryId, purchaseOrderItemId])
+  @@map("delivery_items")
+}
+model Warehouse {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  name String
+  city String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([organizationId, name])
+  @@map("warehouses")
+}
+model InventoryMovement {
+  id String @id @db.Uuid
+  organizationId String @db.Uuid @map("organization_id")
+  warehouseId String @db.Uuid @map("warehouse_id")
+  projectId String? @db.Uuid @map("project_id")
+  boqItemId String? @db.Uuid @map("boq_item_id")
+  movementType InventoryMovementType @map("movement_type")
+  quantity Decimal @db.Decimal(14,3)
+  unitCost Decimal? @db.Decimal(14,2) @map("unit_cost")
+  referenceType String @map("reference_type")
+  referenceId String @db.Uuid @map("reference_id")
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  @@index([organizationId, warehouseId, occurredAt])
+  @@index([organizationId, projectId, occurredAt])
+  @@map("inventory_movements")
+}

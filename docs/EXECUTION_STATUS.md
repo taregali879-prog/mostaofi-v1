@@ -36,3 +36,6 @@ Implemented:
 Remaining external execution gate:
 - `package-lock.json` cannot be generated in this execution environment because npm registry access timed out. Therefore `npm ci`, Nest/Next compilation, Prisma generation/migration, and HTTP E2E cannot truthfully be marked PASS here.
 - On a networked runner: run `npm install`, commit `package-lock.json`, then run CI with PostgreSQL + object storage. Test Ready is achieved only when the CI E2E and build jobs pass.
+
+## v0.4.0
+Scope freeze documented. Procurement, delivery and inventory Prisma baseline added. MVP material-flow domain tests added. Test Ready still requires network-enabled CI for dependency install, Prisma/PostgreSQL migration, build and HTTP E2E.
