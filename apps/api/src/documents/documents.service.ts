@@ -1,0 +1,13 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { PrismaService } from '../database/prisma.service';
+import { S3SignerService } from '../storage/s3-signer.service';
+import { AuditService } from '../audit/audit.service';
+@Injectable() export class DocumentsService{
+ constructor(private db:PrismaService,private s3:S3SignerService,private audit:AuditService){}
+ private async project(ctx:any,id:string){const p=await this.db.project.findFirst({where:{id,organizationId:ctx.org}}); if(!p) throw new NotFoundException('PROJECT_NOT_FOUND'); return p}
+ async createUploadIntent(ctx:any,projectId:string,b:any){await this.project(ctx,projectId); if(!b.fileName||!b.mimeType||!b.sizeBytes) throw new BadRequestException('INVALID_FILE_METADATA'); const id=randomUUID(), versionId=randomUUID(), key=`${ctx.org}/${projectId}/${id}/v1/${b.fileName}`; await this.db.document.create({data:{id,organizationId:ctx.org,projectId,type:b.type,title:b.title,currentVersion:1,status:'DRAFT',versions:{create:{id:versionId,version:1,fileName:b.fileName,mimeType:b.mimeType,sizeBytes:BigInt(b.sizeBytes),sha256:'0'.repeat(64),storageKey:key}}}}); return {documentId:id,version:1,...this.s3.presignPut(key,b.mimeType)}}
+ async complete(ctx:any,id:string,b:any){const d=await this.db.document.findFirst({where:{id,organizationId:ctx.org},include:{versions:{where:{version:b.version}}}}); if(!d||!d.versions[0]) throw new NotFoundException('DOCUMENT_NOT_FOUND'); if(!/^[a-f0-9]{64}$/i.test(b.sha256??'')) throw new BadRequestException('INVALID_SHA256'); await this.db.documentVersion.update({where:{id:d.versions[0].id},data:{sha256:b.sha256}}); const out=await this.db.document.update({where:{id},data:{status:'UPLOADED'}}); await this.audit.append({event:'DOCUMENT_UPLOADED',actorId:ctx.sub,organizationId:ctx.org,entityType:'project',entityId:d.projectId,requestId:'api',metadata:{documentId:id,version:b.version}}); return out}
+ async list(ctx:any,projectId:string){await this.project(ctx,projectId); return this.db.document.findMany({where:{organizationId:ctx.org,projectId},include:{versions:true}})}
+ async get(ctx:any,id:string){const d=await this.db.document.findFirst({where:{id,organizationId:ctx.org},include:{versions:true}}); if(!d) throw new NotFoundException('DOCUMENT_NOT_FOUND'); return d}
+}

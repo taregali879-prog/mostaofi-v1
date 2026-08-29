@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContractorStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  TRIAL
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum DocumentStatus {
+  DRAFT
+  UPLOADED
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String       @id @db.Uuid
+  email        String       @unique
+  displayName  String
+  passwordHash String       @map("password_hash")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  memberships  Membership[]
+  auditEvents  AuditEvent[] @relation("ActorAuditEvents")
+  sessions     AuthSession[]
+  @@map("users")
+}
+
+
+model AuthSession {
+  id               String   @id @db.Uuid
+  userId           String   @db.Uuid @map("user_id")
+  organizationId   String   @db.Uuid @map("organization_id")
+  refreshTokenHash String   @map("refresh_token_hash")
+  expiresAt        DateTime @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([userId, organizationId])
+  @@map("auth_sessions")
+}
+
+model Organization {
+  id                String             @id @db.Uuid
+  name              String
+  createdAt         DateTime           @default(now()) @map("created_at")
+  memberships       Membership[]
+  contractorProfile ContractorProfile?
+  projects          Project[]
+  documents         Document[]
+  auditEvents       AuditEvent[]
+  @@map("organizations")
+}
+
+model Membership {
+  id             String       @id @db.Uuid
+  userId         String       @db.Uuid @map("user_id")
+  organizationId String       @db.Uuid @map("organization_id")
+  roles          String[]
+  createdAt      DateTime     @default(now()) @map("created_at")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@map("memberships")
+}
+
+model ContractorProfile {
+  id                       String           @id @db.Uuid
+  organizationId           String           @unique @db.Uuid @map("organization_id")
+  legalName                String           @map("legal_name")
+  commercialRegistrationNo String           @map("commercial_registration_no")
+  city                     String?
+  phone                    String?
+  status                   ContractorStatus @default(DRAFT)
+  trialStartedAt           DateTime?        @map("trial_started_at")
+  trialEndsAt              DateTime?        @map("trial_ends_at")
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+  organization             Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  @@index([status])
+  @@map("contractor_profiles")
+}
+
+model Project {
+  id                String        @id @db.Uuid
+  organizationId    String        @db.Uuid @map("organization_id")
+  name              String
+  clientName        String        @map("client_name")
+  city              String
+  scope             String
+  estimatedValue    Decimal?      @db.Decimal(14,2) @map("estimated_value")
+  expectedStartDate DateTime?     @db.Date @map("expected_start_date")
+  status            ProjectStatus @default(DRAFT)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  documents         Document[]
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@map("projects")
+}
+
+model Document {
+  id             String         @id @db.Uuid
+  organizationId String         @db.Uuid @map("organization_id")
+  projectId      String         @db.Uuid @map("project_id")
+  type           String
+  title          String
+  currentVersion Int            @default(1) @map("current_version")
+  status         DocumentStatus @default(UPLOADED)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  versions       DocumentVersion[]
+  @@index([organizationId, projectId])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id         String   @id @db.Uuid
+  documentId String   @db.Uuid @map("document_id")
+  version    Int
+  fileName   String   @map("file_name")
+  mimeType   String   @map("mime_type")
+  sizeBytes  BigInt   @map("size_bytes")
+  sha256     String   @db.Char(64)
+  storageKey String   @map("storage_key")
+  createdAt  DateTime @default(now()) @map("created_at")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  @@unique([documentId, version])
+  @@index([sha256])
+  @@map("document_versions")
+}
+
+model AuditEvent {
+  id             String        @id @db.Uuid
+  event          String
+  actorId        String?       @db.Uuid @map("actor_id")
+  organizationId String        @db.Uuid @map("organization_id")
+  entityType     String        @map("entity_type")
+  entityId       String        @db.Uuid @map("entity_id")
+  requestId      String        @map("request_id")
+  occurredAt     DateTime      @default(now()) @map("occurred_at")
+  metadata       Json          @default("{}")
+  actor          User?         @relation("ActorAuditEvents", fields: [actorId], references: [id], onDelete: SetNull)
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  @@index([organizationId, entityType, entityId, occurredAt])
+  @@index([requestId])
+  @@map("audit_events")
+}

@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Projects(){return <><h1>المشاريع</h1><div className="card"><h3>إنشاء مشروع</h3><div className="grid"><input className="field" placeholder="اسم المشروع"/><input className="field" placeholder="العميل"/><input className="field" placeholder="المدينة"/><input className="field" placeholder="نطاق العمل"/></div><button className="btn">إنشاء المشروع</button></div><div className="card"><h3>مشروع تجريبي</h3><p className="muted">أنظمة إطفاء وإنذار — جازان</p><Link className="btn" href="/projects/demo">لوحة المشروع</Link></div></>}

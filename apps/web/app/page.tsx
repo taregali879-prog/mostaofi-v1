@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Home(){return <><h1>لوحة منصة مقاول الشريك</h1><p className="muted">النسخة التنفيذية الأولى للـ Vertical Slice.</p><div className="grid"><div className="card"><h3>المقاول الشريك</h3><p>الملف والتأهيل والحالة.</p><Link className="btn" href="/contractor">فتح الملف</Link></div><div className="card"><h3>المشاريع</h3><p>إنشاء المشروع ثم المستندات وسجل النشاط.</p><Link className="btn" href="/projects">فتح المشاريع</Link></div></div></>}

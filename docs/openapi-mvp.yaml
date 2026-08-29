@@ -1,0 +1,3388 @@
+openapi: 3.1.0
+info:
+  title: مقاول الشريك API
+  version: 1.0.0
+  description: Baseline MVP API. Detailed field rules live in SRS and API catalog.
+servers:
+- url: https://api.example.sa/api/v1
+  description: Production placeholder
+tags: []
+paths:
+  /api/v1/auth/register:
+    post:
+      operationId: AUTH_001
+      summary: إنشاء حساب
+      description: 'Authorization: Public. Rate limit: 5/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: mobile,email?,password,consents
+  /api/v1/auth/login:
+    post:
+      operationId: AUTH_002
+      summary: تسجيل الدخول
+      description: 'Authorization: Public. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: identifier,password
+  /api/v1/auth/mfa/verify:
+    post:
+      operationId: AUTH_003
+      summary: التحقق من MFA
+      description: 'Authorization: Authenticated pending MFA. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: challenge_id,code
+  /api/v1/auth/refresh:
+    post:
+      operationId: AUTH_004
+      summary: تجديد الجلسة
+      description: 'Authorization: Refresh token. Rate limit: 20/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: refresh_token
+  /api/v1/auth/logout:
+    post:
+      operationId: AUTH_005
+      summary: إنهاء الجلسة
+      description: 'Authorization: Authenticated. Rate limit: 30/min.'
+      responses:
+        '204':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: refresh_token?
+  /api/v1/me:
+    get:
+      operationId: AUTH_006
+      summary: بيانات المستخدم الحالي
+      description: 'Authorization: Authenticated. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/contractors/applications:
+    post:
+      operationId: CON_001
+      summary: بدء طلب تأهيل مقاول
+      description: 'Authorization: Authenticated. Rate limit: 20/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: organization,contacts,specialties
+  /api/v1/contractors/applications/{id}:
+    get:
+      operationId: CON_002
+      summary: قراءة طلب التأهيل
+      description: 'Authorization: Owner/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: CON_003
+      summary: تحديث طلب قبل الإرسال
+      description: 'Authorization: Owner. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: partial application
+  /api/v1/contractors/applications/{id}/documents:
+    post:
+      operationId: CON_004
+      summary: إضافة مستند تأهيل
+      description: 'Authorization: Owner. Rate limit: 30/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: document_type,file_token,dates?
+  /api/v1/contractors/applications/{id}/submit:
+    post:
+      operationId: CON_005
+      summary: إرسال الطلب للمراجعة
+      description: 'Authorization: Owner. Rate limit: 5/min.'
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/contractors/{id}/review:
+    post:
+      operationId: CON_006
+      summary: قرار التأهيل
+      description: 'Authorization: Admin/TechnicalReviewer. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: decision,notes,trial_days?
+  /api/v1/contractors:
+    get:
+      operationId: CON_007
+      summary: قائمة المقاولين
+      description: 'Authorization: Authenticated scoped. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/contractors/{id}:
+    get:
+      operationId: CON_008
+      summary: ملف المقاول
+      description: 'Authorization: Scoped. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/contractors/{id}/score:
+    get:
+      operationId: CON_009
+      summary: تفصيل درجة المقاول
+      description: 'Authorization: Owner/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/customers:
+    post:
+      operationId: CRM_001
+      summary: إنشاء عميل
+      description: 'Authorization: Contractor/Sales/Admin. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: name,mobile?,email?,identifier?
+    get:
+      operationId: CRM_002
+      summary: قائمة العملاء
+      description: 'Authorization: Scoped. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/opportunities:
+    post:
+      operationId: OPP_001
+      summary: تسجيل فرصة/حماية مشروع
+      description: 'Authorization: Contractor/Sales. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: customer_id,title,estimated_value,source
+  /api/v1/opportunities/{id}/protect:
+    post:
+      operationId: OPP_002
+      summary: تفعيل حماية الفرصة
+      description: 'Authorization: Admin/Operations. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: protected_until,notes
+  /api/v1/projects:
+    post:
+      operationId: PRJ_001
+      summary: إنشاء مشروع
+      description: 'Authorization: Contractor/Admin. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: customer_id,name,type,location,value,dates,systems[]
+    get:
+      operationId: PRJ_002
+      summary: قائمة المشاريع
+      description: 'Authorization: Scoped. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/projects/{id}:
+    get:
+      operationId: PRJ_003
+      summary: تفاصيل المشروع
+      description: 'Authorization: Project member/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: PRJ_004
+      summary: تحديث بيانات المشروع
+      description: 'Authorization: Project owner/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: partial project
+  /api/v1/projects/{id}/stages:
+    post:
+      operationId: PRJ_005
+      summary: إضافة مرحلة
+      description: 'Authorization: Project owner/Admin. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: code,name,sequence,planned_dates
+  /api/v1/projects/{id}/updates:
+    post:
+      operationId: PRJ_006
+      summary: رفع تحديث تقدم
+      description: 'Authorization: Contractor/Project member. Rate limit: 30/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: stage_id?,progress,summary,issues?,attachments[]
+  /api/v1/projects/{id}/timeline:
+    get:
+      operationId: PRJ_007
+      summary: سجل المشروع
+      description: 'Authorization: Project member. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/projects/{id}/alerts:
+    get:
+      operationId: PRJ_008
+      summary: تنبيهات المشروع
+      description: 'Authorization: Project member/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/projects/{id}/reminders:
+    post:
+      operationId: PRJ_009
+      summary: تذكير المقاول بالتحديث
+      description: 'Authorization: Admin/Operations. Rate limit: 10/min.'
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: due_at,fields_required[],message?
+  /api/v1/projects/{id}/close:
+    post:
+      operationId: PRJ_010
+      summary: طلب إغلاق المشروع بعد التحقق
+      description: 'Authorization: Admin/Operations. Rate limit: 5/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: checklist_confirmed
+  /api/v1/projects/{id}/boqs:
+    post:
+      operationId: BOQ_001
+      summary: إنشاء إصدار BOQ
+      description: 'Authorization: TechnicalReviewer/Contractor. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: currency,items[]
+    get:
+      operationId: BOQ_002
+      summary: إصدارات BOQ
+      description: 'Authorization: Project member. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/boqs/{id}:
+    get:
+      operationId: BOQ_003
+      summary: قراءة BOQ
+      description: 'Authorization: Project member. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: BOQ_004
+      summary: تعديل BOQ Draft
+      description: 'Authorization: Author/TechnicalReviewer. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: items/notes
+  /api/v1/boqs/{id}/submit:
+    post:
+      operationId: BOQ_005
+      summary: إرسال للمراجعة
+      description: 'Authorization: Author. Rate limit: 120/min.'
+      responses:
+        '202':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/boqs/{id}/decision:
+    post:
+      operationId: BOQ_006
+      summary: اعتماد/رفض BOQ
+      description: 'Authorization: TechnicalReviewer. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: decision,comment?
+  /api/v1/products:
+    get:
+      operationId: CAT_001
+      summary: البحث في المنتجات
+      description: 'Authorization: Authenticated/Public limited. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+    post:
+      operationId: CAT_003
+      summary: إضافة منتج
+      description: 'Authorization: Admin/Procurement. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: حسب العملية
+  /api/v1/products/{id}:
+    get:
+      operationId: CAT_002
+      summary: تفاصيل المنتج
+      description: 'Authorization: Authenticated/Public limited. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/products/{id}/documents:
+    post:
+      operationId: CAT_004
+      summary: إرفاق Datasheet/اعتماد
+      description: 'Authorization: Admin/TechnicalReviewer. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: حسب العملية
+  /api/v1/suppliers:
+    get:
+      operationId: SUP_001
+      summary: قائمة الموردين
+      description: 'Authorization: Procurement/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+    post:
+      operationId: SUP_002
+      summary: إضافة مورد
+      description: 'Authorization: Admin/Procurement. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: حسب العملية
+  /api/v1/rfqs:
+    post:
+      operationId: RFQ_001
+      summary: إنشاء RFQ
+      description: 'Authorization: Procurement. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: project_id?,required_by,items[],supplier_ids[]
+  /api/v1/rfqs/{id}/comparison:
+    get:
+      operationId: RFQ_002
+      summary: مقارنة عروض الموردين
+      description: 'Authorization: Procurement/Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/rfqs/{id}/quotes:
+    post:
+      operationId: RFQ_003
+      summary: إدخال عرض مورد
+      description: 'Authorization: Supplier/Procurement. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: supplier_id,valid_until,items[],delivery_days
+  /api/v1/purchase-orders:
+    post:
+      operationId: PO_001
+      summary: إنشاء أمر شراء
+      description: 'Authorization: Procurement. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: supplier_id,project_id?,warehouse_id?,items[]
+    get:
+      operationId: PO_002
+      summary: قائمة أوامر الشراء
+      description: 'Authorization: Procurement/Finance. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/purchase-orders/{id}/approve:
+    post:
+      operationId: PO_003
+      summary: اعتماد أمر الشراء
+      description: 'Authorization: Approver. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: decision,comment?
+  /api/v1/inventory/balances:
+    get:
+      operationId: INV_001
+      summary: أرصدة المخزون
+      description: 'Authorization: Warehouse/Operations. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/inventory/movements:
+    post:
+      operationId: INV_002
+      summary: حركة مخزون
+      description: 'Authorization: Warehouse. Rate limit: 60/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: warehouse_id,product_id,type,qty,reference
+  /api/v1/inventory/counts:
+    post:
+      operationId: INV_003
+      summary: بدء/إقفال جرد
+      description: 'Authorization: Warehouse. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: warehouse_id,lines[]
+  /api/v1/deliveries:
+    post:
+      operationId: DLV_001
+      summary: إنشاء شحنة/تسليم
+      description: 'Authorization: Operations. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: project_id?,po_id?,sales_order_id?,items[],recipient
+  /api/v1/deliveries/{id}/proof:
+    post:
+      operationId: DLV_002
+      summary: إثبات التسليم
+      description: 'Authorization: SalesRep/Operations. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: recipient_name,signature_token?,photos[]
+  /api/v1/sales-quotes:
+    post:
+      operationId: SALE_001
+      summary: إنشاء عرض سعر
+      description: 'Authorization: Sales/Contractor/Admin. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: customer_id,project_id?,items[],valid_until,terms
+  /api/v1/sales-quotes/{id}/issue:
+    post:
+      operationId: SALE_002
+      summary: إصدار PDF نهائي
+      description: 'Authorization: Sales/Admin. Rate limit: 20/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/sales-quotes/{id}/accept:
+    post:
+      operationId: SALE_003
+      summary: قبول العرض
+      description: 'Authorization: Customer/Authorized. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: consent,signature?
+  /api/v1/invoices:
+    get:
+      operationId: FIN_001
+      summary: قائمة الفواتير
+      description: 'Authorization: Finance/Scoped. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+    post:
+      operationId: FIN_002
+      summary: إنشاء فاتورة
+      description: 'Authorization: Finance. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: sales_order_id?,project_id?,customer_id,lines[],due_date
+  /api/v1/payments:
+    post:
+      operationId: FIN_003
+      summary: تسجيل دفعة
+      description: 'Authorization: Finance/POS integration. Rate limit: 30/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: invoice_id?,payer_org_id,amount,method,reference
+  /api/v1/credit-accounts/{organizationId}:
+    get:
+      operationId: FIN_004
+      summary: الحساب الائتماني
+      description: 'Authorization: Finance/Org owner. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: organizationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: FIN_005
+      summary: تعديل الحد بعد المراجعة
+      description: 'Authorization: Finance approver. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: organizationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: credit_limit,terms_days,risk_grade,reason
+  /api/v1/credit-guarantees:
+    post:
+      operationId: FIN_006
+      summary: إضافة ضمانة
+      description: 'Authorization: Finance. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: organization_id,type,reference,amount?,valid_to?,file_token
+  /api/v1/documents/presign:
+    post:
+      operationId: DOC_001
+      summary: الحصول على رابط رفع آمن
+      description: 'Authorization: Authenticated. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: filename,mime_type,size,context
+  /api/v1/projects/{id}/documents:
+    post:
+      operationId: DOC_002
+      summary: تسجيل مستند مرفوع
+      description: 'Authorization: Project member. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: doc_type,title,storage_key,version,metadata
+    get:
+      operationId: DOC_003
+      summary: مكتبة المستندات
+      description: 'Authorization: Project member. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/documents/{id}/approvals:
+    post:
+      operationId: DOC_004
+      summary: قرار مستند
+      description: 'Authorization: Approver. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: decision,comment?
+  /api/v1/projects/{id}/certificates/installation:
+    post:
+      operationId: DOC_005
+      summary: إنشاء شهادة إنهاء التركيبات
+      description: 'Authorization: Authorized contractor/Admin. Rate limit: 10/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: template_version,products[],signatory,issue_data
+  /api/v1/maintenance-contracts:
+    post:
+      operationId: MNT_001
+      summary: إنشاء عقد صيانة
+      description: 'Authorization: Operations/Contractor. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: project_id,start_date,end_date,sla_policy_id?
+  /api/v1/service-tickets:
+    post:
+      operationId: MNT_002
+      summary: فتح بلاغ
+      description: 'Authorization: Customer/Contractor/Support. Rate limit: 20/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: project_id,category,priority,description,attachments[]
+  /api/v1/service-tickets/{id}:
+    patch:
+      operationId: MNT_003
+      summary: تحديث البلاغ
+      description: 'Authorization: Assigned technician/Support. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: status,assignee?,resolution?,attachments?
+  /api/v1/assets:
+    get:
+      operationId: AST_001
+      summary: قائمة الأصول
+      description: 'Authorization: Operations/Finance. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/rental-contracts:
+    post:
+      operationId: AST_002
+      summary: إنشاء عقد تأجير
+      description: 'Authorization: Operations/Finance. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: asset_id,contractor_id,project_id?,dates,rate,deposit?
+  /api/v1/rental-contracts/{id}/checkout:
+    post:
+      operationId: AST_003
+      summary: محضر تسليم الأصل
+      description: 'Authorization: Operations. Rate limit: 120/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: condition,photos,meter,signatory
+  /api/v1/rental-contracts/{id}/return:
+    post:
+      operationId: AST_004
+      summary: محضر استرداد الأصل
+      description: 'Authorization: Operations. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: condition,photos,meter,damages?
+  /api/v1/loyalty/me:
+    get:
+      operationId: LOY_001
+      summary: رصيد وتصنيف الشريك
+      description: 'Authorization: Contractor. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/loyalty/rules:
+    get:
+      operationId: LOY_002
+      summary: قواعد النقاط والتصنيف
+      description: 'Authorization: Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/loyalty/rules/{id}:
+    put:
+      operationId: LOY_003
+      summary: تعديل قاعدة بإصدار فعال
+      description: 'Authorization: Admin. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: weights,thresholds,effective_at
+  /api/v1/pos/sales:
+    post:
+      operationId: POS_001
+      summary: بيع ميداني
+      description: 'Authorization: SalesRep. Rate limit: 60/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: route_visit_id?,customer_id?,items[],payment?
+  /api/v1/routes/today:
+    get:
+      operationId: POS_002
+      summary: مسار اليوم
+      description: 'Authorization: SalesRep. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/routes/{id}/visits/{visitId}/checkin:
+    post:
+      operationId: POS_003
+      summary: تسجيل وصول للزيارة
+      description: 'Authorization: SalesRep. Rate limit: 60/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: visitId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: location?,timestamp
+  /api/v1/reports/executive:
+    get:
+      operationId: RPT_001
+      summary: لوحة مؤشرات تنفيذية
+      description: 'Authorization: Admin/Owner. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/reports/revenue-mix:
+    get:
+      operationId: RPT_002
+      summary: مزيج الإيرادات الرباعي
+      description: 'Authorization: Admin/Finance. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/users:
+    get:
+      operationId: ADM_001
+      summary: قائمة المستخدمين
+      description: 'Authorization: Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/users/{id}/roles:
+    post:
+      operationId: ADM_002
+      summary: إسناد دور/نطاق
+      description: 'Authorization: Admin. Rate limit: 20/min.'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: role_code,scope_type?,scope_id?
+  /api/v1/admin/audit-logs:
+    get:
+      operationId: ADM_003
+      summary: سجل التدقيق
+      description: 'Authorization: Auditor/Admin. Rate limit: 30/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/settings:
+    get:
+      operationId: ADM_004
+      summary: قراءة الإعدادات
+      description: 'Authorization: Admin. Rate limit: 120/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+  /api/v1/admin/settings/{key}:
+    put:
+      operationId: ADM_005
+      summary: تعديل إعداد مضبوط الإصدار
+      description: 'Authorization: Admin. Rate limit: 10/min.'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericData'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '409':
+          description: State conflict
+        '422':
+          description: Business rule violation
+        '429':
+          description: Rate limited
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              _fields: value,reason
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            request_id:
+              type: string
+    GenericData:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true

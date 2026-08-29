@@ -1,0 +1,12 @@
+INSERT INTO users (id,email,display_name,password_hash) VALUES
+('01900000-0000-7000-8000-000000000001','admin@partner.local','مدير المقاول الشريك','scrypt$d9f8847443b776e895b60c17d3b1d1ee$4f1c3a2bbc486446ec1bdcc22e0f2b06aec12996720d0a50dbeaf042e812396d27fc857cc395d913b571a2cef6b5d8757c67c6dd4d09093f53f2f74aed60b338')
+ON CONFLICT DO NOTHING;
+INSERT INTO organizations (id,name) VALUES
+('01900000-0000-7000-8000-000000000101','مؤسسة المقاول الشريك التجريبية')
+ON CONFLICT DO NOTHING;
+INSERT INTO memberships (id,user_id,organization_id,roles) VALUES
+('01900000-0000-7000-8000-000000000111','01900000-0000-7000-8000-000000000001','01900000-0000-7000-8000-000000000101',ARRAY['CONTRACTOR_ADMIN','PROJECT_MANAGER'])
+ON CONFLICT DO NOTHING;
+INSERT INTO contractor_profiles (id,organization_id,legal_name,commercial_registration_no,city,phone,status) VALUES
+('01900000-0000-7000-8000-000000000201','01900000-0000-7000-8000-000000000101','مؤسسة المقاول الشريك التجريبية','1010101010','جازان','0500000000','DRAFT')
+ON CONFLICT DO NOTHING;

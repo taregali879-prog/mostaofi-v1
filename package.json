@@ -1,0 +1,24 @@
+{
+  "name": "muqawil-partner-platform",
+  "private": true,
+  "version": "0.2.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "validate:repo": "node scripts/validate-repo.mjs",
+    "test:domain": "node --test tests/*.test.mjs",
+    "smoke": "node scripts/smoke-contract.mjs",
+    "test:local": "npm run validate:repo && npm run test:domain && npm run smoke",
+    "dev:api": "npm --workspace apps/api run start:dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "build": "npm --workspace packages/contracts run build && npm --workspace apps/api run build && npm --workspace apps/web run build",
+    "db:generate": "npm --workspace apps/api run prisma:generate",
+    "db:migrate": "npm --workspace apps/api run prisma:migrate",
+    "test:e2e": "npm --workspace apps/api run test:e2e"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
