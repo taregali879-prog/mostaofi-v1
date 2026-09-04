@@ -1,0 +1,122 @@
+matrixId: MOSTAOFI-V1.1-S1-GOVERNANCE-MATRIX-FINAL-001
+status: FINAL_FOR_EXECUTION
+manifest: governance/s1/ci-manifest-r003.yaml
+testRegistryRevision: '002'
+decisionFormula:
+  S1_PASS: S1_PASS = G01_PASS ∧ G02_PASS ∧ G03_PASS ∧ G04_PASS ∧ G05_PASS ∧ G06_PASS ∧ G07_PASS ∧ G08_PASS ∧ G09_PASS ∧ G10_PASS
+  S2_UNLOCKED: S2_UNLOCKED = S1_PASS
+  failureMode: FAIL_CLOSED
+gates:
+- id: G01
+  name: Schema Validation
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-001
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-004
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G02
+  name: Request/Response Conformance
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-001
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-010
+  - S1-CT-011
+  - S1-CT-020
+  - S1-CT-030
+  - S1-CT-040
+  - S1-CT-041
+  - S1-CT-043
+  - S1-CT-070
+  - S1-CT-071
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G03
+  name: Lifecycle + Idempotency
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-013
+  - S1-CT-041
+  - S1-CT-042
+  - S1-CT-043
+  - S1-CT-044
+  - S1-CT-050
+  - S1-CT-051
+  - S1-CT-052
+  - S1-CT-053
+  - S1-CT-054
+  - S1-CT-061
+  - S1-CT-062
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G04
+  name: Canonical Error Registry
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-004
+  - S1-CT-011
+  - S1-CT-012
+  - S1-CT-021
+  - S1-CT-022
+  - S1-CT-023
+  - S1-CT-024
+  - S1-CT-032
+  - S1-CT-040
+  - S1-CT-042
+  - S1-CT-054
+  - S1-CT-060
+  - S1-CT-062
+  - S1-CT-071
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G05
+  name: ETag / If-Match Concurrency
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-060
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G06
+  name: Amendment Protection
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-024
+  - S1-CT-031
+  - S1-CT-032
+  - S1-CT-052
+  - S1-CT-054
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G07
+  name: Contract 360 Projection Integrity
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-070
+  - S1-CT-071
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G08
+  name: Pagination Determinism
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-072
+  - S1-CT-073
+  - S1-CT-074
+  passRule: All mapped required pagination tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G09
+  name: SLA Policy Version Binding
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-030
+  - S1-CT-031
+  - S1-CT-032
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+- id: G10
+  name: Scope Coverage Contract Validation
+  coverageStatus: COVERED
+  mappedTests:
+  - S1-CT-020
+  - S1-CT-021
+  - S1-CT-022
+  - S1-CT-023
+  - S1-CT-024
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.

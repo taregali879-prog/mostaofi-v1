@@ -1,0 +1,1399 @@
+manifestVersion: '3.0'
+name: Mostaofi v1.1 S1 CI Execution Manifest — S0-Accepted / Registry R002 / Evidence R003
+specification: spec/s1/openapi.yaml
+status: FROZEN_SPECIFICATION_CANDIDATE
+failurePolicy:
+  passValues:
+  - PASS
+  nonPassValues:
+  - FAIL
+  - BLOCKED
+  - UNKNOWN
+  - MISSING
+  - SKIPPED
+  rule: Every required acceptance gate and required test must PASS for sprint acceptance/final freeze. Non-PASS runtime states
+    do not by themselves block controlled implementation start.
+implementationStartPolicy:
+  revision: MOSTAOFI-V1.1-GATE-SEPARATION-R001
+  purpose: Authorize controlled S0-S10 implementation without pretending runtime acceptance evidence already exists.
+  requires:
+  - ERD baseline frozen and exact digest verified
+  - OpenAPI candidate exact digest bound and static validation PASS
+  - no baseline drift
+  - source commit bound and working tree clean
+  - Test Registry R002 adopted with complete gate coverage
+  - governance audit PASS
+  - development toolchain ready
+  doesNotRequire:
+  - G01..G10 runtime PASS
+  - all Contract Tests PASS_EVIDENCED
+  effect: Allows development only; does not authorize sprint acceptance, OpenAPI final freeze, release, deployment, or pilot.
+sprintAcceptancePolicy:
+  failureMode: fail-closed
+  requires:
+  - all required Contract Tests mapped to the sprint PASS_EVIDENCED
+  - relevant ERD DB/integration invariants PASS_EVIDENCED
+  - evidence integrity VERIFIED
+  - tested commit equals authorized commit
+  - governance audit PASS
+  - no baseline drift
+openApiFinalFreezePolicy:
+  failureMode: fail-closed
+  requires:
+  - all adopted Contract Tests PASS_EVIDENCED
+  - G01..G10 PASS
+  - all required ERD DB/integration invariants PASS_EVIDENCED
+  - evidence integrity VERIFIED
+  - tested commit equals authorized commit
+  - governance audit PASS
+  - no baseline drift
+  effect: Freezes the OpenAPI candidate only; release/pilot still requires the separate release governance decision.
+tests:
+- id: S1-CT-001
+  name: create_contract_success
+  method: POST
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 201
+  governance:
+    gates:
+    - G01
+    - G02
+    evidence:
+      result: evidence/s1/tests/S1-CT-001/result.json
+      request: evidence/s1/tests/S1-CT-001/request.json
+      response: evidence/s1/tests/S1-CT-001/response.json
+      log: evidence/s1/tests/S1-CT-001/execution.log
+      integrity: evidence/s1/tests/S1-CT-001/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-002
+  name: create_contract_cross_tenant_denied
+  method: POST
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 403
+    errorCode: TENANT_SCOPE_VIOLATION
+  governance:
+    gates:
+    - G01
+    - G02
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-002/result.json
+      request: evidence/s1/tests/S1-CT-002/request.json
+      response: evidence/s1/tests/S1-CT-002/response.json
+      log: evidence/s1/tests/S1-CT-002/execution.log
+      integrity: evidence/s1/tests/S1-CT-002/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-003
+  name: invalid_contract_dates_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 422
+    errorCode: INVALID_DATES
+  governance:
+    gates:
+    - G01
+    - G02
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-003/result.json
+      request: evidence/s1/tests/S1-CT-003/request.json
+      response: evidence/s1/tests/S1-CT-003/response.json
+      log: evidence/s1/tests/S1-CT-003/execution.log
+      integrity: evidence/s1/tests/S1-CT-003/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-004
+  name: duplicate_contract_number_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 409
+    errorCode: CONTRACT_NUMBER_CONFLICT
+  governance:
+    gates:
+    - G01
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-004/result.json
+      request: evidence/s1/tests/S1-CT-004/request.json
+      response: evidence/s1/tests/S1-CT-004/response.json
+      log: evidence/s1/tests/S1-CT-004/execution.log
+      integrity: evidence/s1/tests/S1-CT-004/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-010
+  name: add_contract_site_success
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sites
+  required: true
+  expect:
+    status: 201
+  governance:
+    gates:
+    - G02
+    evidence:
+      result: evidence/s1/tests/S1-CT-010/result.json
+      request: evidence/s1/tests/S1-CT-010/request.json
+      response: evidence/s1/tests/S1-CT-010/response.json
+      log: evidence/s1/tests/S1-CT-010/execution.log
+      integrity: evidence/s1/tests/S1-CT-010/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-011
+  name: cross_tenant_site_denied
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sites
+  required: true
+  expect:
+    status: 403
+    errorCode: TENANT_SCOPE_VIOLATION
+  governance:
+    gates:
+    - G02
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-011/result.json
+      request: evidence/s1/tests/S1-CT-011/request.json
+      response: evidence/s1/tests/S1-CT-011/response.json
+      log: evidence/s1/tests/S1-CT-011/execution.log
+      integrity: evidence/s1/tests/S1-CT-011/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-012
+  name: duplicate_site_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sites
+  required: true
+  expect:
+    status: 409
+    errorCode: DUPLICATE_CONTRACT_SITE
+  governance:
+    gates:
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-012/result.json
+      request: evidence/s1/tests/S1-CT-012/request.json
+      response: evidence/s1/tests/S1-CT-012/response.json
+      log: evidence/s1/tests/S1-CT-012/execution.log
+      integrity: evidence/s1/tests/S1-CT-012/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-013
+  name: deactivate_site_idempotent
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sites/{siteId}/deactivate
+  required: true
+  expect:
+    status: 200
+    repeatStatus: 200
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-013/result.json
+      request: evidence/s1/tests/S1-CT-013/request.json
+      response: evidence/s1/tests/S1-CT-013/response.json
+      log: evidence/s1/tests/S1-CT-013/execution.log
+      integrity: evidence/s1/tests/S1-CT-013/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-020
+  name: add_scope_success
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/scopes
+  required: true
+  expect:
+    status: 201
+  governance:
+    gates:
+    - G02
+    - G10
+    evidence:
+      result: evidence/s1/tests/S1-CT-020/result.json
+      request: evidence/s1/tests/S1-CT-020/request.json
+      response: evidence/s1/tests/S1-CT-020/response.json
+      log: evidence/s1/tests/S1-CT-020/execution.log
+      integrity: evidence/s1/tests/S1-CT-020/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-021
+  name: invalid_scope_config_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/scopes
+  required: true
+  expect:
+    status: 422
+    errorCode: INVALID_SCOPE_CONFIGURATION
+  governance:
+    gates:
+    - G04
+    - G10
+    evidence:
+      result: evidence/s1/tests/S1-CT-021/result.json
+      request: evidence/s1/tests/S1-CT-021/request.json
+      response: evidence/s1/tests/S1-CT-021/response.json
+      log: evidence/s1/tests/S1-CT-021/execution.log
+      integrity: evidence/s1/tests/S1-CT-021/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-022
+  name: limited_scope_requires_limit
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/scopes
+  required: true
+  expect:
+    status: 422
+    errorCode: INVALID_SCOPE_COVERAGE
+  governance:
+    gates:
+    - G04
+    - G10
+    evidence:
+      result: evidence/s1/tests/S1-CT-022/result.json
+      request: evidence/s1/tests/S1-CT-022/request.json
+      response: evidence/s1/tests/S1-CT-022/response.json
+      log: evidence/s1/tests/S1-CT-022/execution.log
+      integrity: evidence/s1/tests/S1-CT-022/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-023
+  name: conditional_scope_requires_conditions
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/scopes
+  required: true
+  expect:
+    status: 422
+    errorCode: INVALID_SCOPE_COVERAGE
+  governance:
+    gates:
+    - G04
+    - G10
+    evidence:
+      result: evidence/s1/tests/S1-CT-023/result.json
+      request: evidence/s1/tests/S1-CT-023/request.json
+      response: evidence/s1/tests/S1-CT-023/response.json
+      log: evidence/s1/tests/S1-CT-023/execution.log
+      integrity: evidence/s1/tests/S1-CT-023/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-024
+  name: active_scope_direct_mutation_rejected
+  method: PATCH
+  path: /api/v1/maintenance/contracts/{contractId}/scopes/{scopeId}
+  required: true
+  expect:
+    status: 409
+    errorCode: CONTRACT_SCOPE_AMENDMENT_REQUIRED
+  governance:
+    gates:
+    - G04
+    - G06
+    - G10
+    evidence:
+      result: evidence/s1/tests/S1-CT-024/result.json
+      request: evidence/s1/tests/S1-CT-024/request.json
+      response: evidence/s1/tests/S1-CT-024/response.json
+      log: evidence/s1/tests/S1-CT-024/execution.log
+      integrity: evidence/s1/tests/S1-CT-024/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-030
+  name: create_sla_version
+  method: POST
+  path: /api/v1/maintenance/sla-policies/{slaPolicyId}/versions
+  required: true
+  expect:
+    status: 201
+  governance:
+    gates:
+    - G02
+    - G09
+    evidence:
+      result: evidence/s1/tests/S1-CT-030/result.json
+      request: evidence/s1/tests/S1-CT-030/request.json
+      response: evidence/s1/tests/S1-CT-030/response.json
+      log: evidence/s1/tests/S1-CT-030/execution.log
+      integrity: evidence/s1/tests/S1-CT-030/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-031
+  name: assigned_sla_version_is_historically_stable
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sla
+  required: true
+  expect:
+    assertion: bound slaPolicyVersionId remains unchanged after source policy receives a newer version
+  governance:
+    gates:
+    - G06
+    - G09
+    evidence:
+      result: evidence/s1/tests/S1-CT-031/result.json
+      request: evidence/s1/tests/S1-CT-031/request.json
+      response: evidence/s1/tests/S1-CT-031/response.json
+      log: evidence/s1/tests/S1-CT-031/execution.log
+      integrity: evidence/s1/tests/S1-CT-031/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-032
+  name: active_contract_sla_replacement_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/sla
+  required: true
+  expect:
+    status: 409
+    errorCode: SLA_AMENDMENT_REQUIRED
+  governance:
+    gates:
+    - G04
+    - G06
+    - G09
+    evidence:
+      result: evidence/s1/tests/S1-CT-032/result.json
+      request: evidence/s1/tests/S1-CT-032/request.json
+      response: evidence/s1/tests/S1-CT-032/response.json
+      log: evidence/s1/tests/S1-CT-032/execution.log
+      integrity: evidence/s1/tests/S1-CT-032/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-040
+  name: incomplete_contract_submission_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/submit
+  required: true
+  expect:
+    status: 422
+    errorCode: CONTRACT_NOT_READY
+  governance:
+    gates:
+    - G02
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-040/result.json
+      request: evidence/s1/tests/S1-CT-040/request.json
+      response: evidence/s1/tests/S1-CT-040/response.json
+      log: evidence/s1/tests/S1-CT-040/execution.log
+      integrity: evidence/s1/tests/S1-CT-040/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-041
+  name: valid_contract_submission
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/submit
+  required: true
+  expect:
+    status: 200
+    resultStatus: PENDING_APPROVAL
+  governance:
+    gates:
+    - G02
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-041/result.json
+      request: evidence/s1/tests/S1-CT-041/request.json
+      response: evidence/s1/tests/S1-CT-041/response.json
+      log: evidence/s1/tests/S1-CT-041/execution.log
+      integrity: evidence/s1/tests/S1-CT-041/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-042
+  name: direct_draft_activation_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/activate
+  required: true
+  expect:
+    status: 409
+    errorCode: INVALID_STATE_TRANSITION
+  governance:
+    gates:
+    - G03
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-042/result.json
+      request: evidence/s1/tests/S1-CT-042/request.json
+      response: evidence/s1/tests/S1-CT-042/response.json
+      log: evidence/s1/tests/S1-CT-042/execution.log
+      integrity: evidence/s1/tests/S1-CT-042/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-043
+  name: valid_activation
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/activate
+  required: true
+  expect:
+    status: 200
+    resultStatus: ACTIVE
+    event: maintenance.contract.activated
+  governance:
+    gates:
+    - G02
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-043/result.json
+      request: evidence/s1/tests/S1-CT-043/request.json
+      response: evidence/s1/tests/S1-CT-043/response.json
+      log: evidence/s1/tests/S1-CT-043/execution.log
+      integrity: evidence/s1/tests/S1-CT-043/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-044
+  name: repeated_activation_idempotent
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/activate
+  required: true
+  expect:
+    status: 200
+    repeatStatus: 200
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-044/result.json
+      request: evidence/s1/tests/S1-CT-044/request.json
+      response: evidence/s1/tests/S1-CT-044/response.json
+      log: evidence/s1/tests/S1-CT-044/execution.log
+      integrity: evidence/s1/tests/S1-CT-044/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-050
+  name: suspend_active_contract
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/suspend
+  required: true
+  expect:
+    status: 200
+    resultStatus: SUSPENDED
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-050/result.json
+      request: evidence/s1/tests/S1-CT-050/request.json
+      response: evidence/s1/tests/S1-CT-050/response.json
+      log: evidence/s1/tests/S1-CT-050/execution.log
+      integrity: evidence/s1/tests/S1-CT-050/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-051
+  name: resume_suspended_contract
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/resume
+  required: true
+  expect:
+    status: 200
+    resultStatus: ACTIVE
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-051/result.json
+      request: evidence/s1/tests/S1-CT-051/request.json
+      response: evidence/s1/tests/S1-CT-051/response.json
+      log: evidence/s1/tests/S1-CT-051/execution.log
+      integrity: evidence/s1/tests/S1-CT-051/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-052
+  name: terminate_contract
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/terminate
+  required: true
+  expect:
+    status: 200
+    resultStatus: TERMINATED
+  governance:
+    gates:
+    - G03
+    - G06
+    evidence:
+      result: evidence/s1/tests/S1-CT-052/result.json
+      request: evidence/s1/tests/S1-CT-052/request.json
+      response: evidence/s1/tests/S1-CT-052/response.json
+      log: evidence/s1/tests/S1-CT-052/execution.log
+      integrity: evidence/s1/tests/S1-CT-052/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-053
+  name: terminal_command_repeat_safe
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/terminate
+  required: true
+  expect:
+    status: 200
+    repeatStatus: 200
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-053/result.json
+      request: evidence/s1/tests/S1-CT-053/request.json
+      response: evidence/s1/tests/S1-CT-053/response.json
+      log: evidence/s1/tests/S1-CT-053/execution.log
+      integrity: evidence/s1/tests/S1-CT-053/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-054
+  name: illegal_terminal_transition_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/resume
+  required: true
+  expect:
+    status: 409
+    errorCode: INVALID_STATE_TRANSITION
+  governance:
+    gates:
+    - G03
+    - G04
+    - G06
+    evidence:
+      result: evidence/s1/tests/S1-CT-054/result.json
+      request: evidence/s1/tests/S1-CT-054/request.json
+      response: evidence/s1/tests/S1-CT-054/response.json
+      log: evidence/s1/tests/S1-CT-054/execution.log
+      integrity: evidence/s1/tests/S1-CT-054/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-060
+  name: stale_if_match_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/suspend
+  required: true
+  expect:
+    status: 409
+    errorCode: CONCURRENT_MODIFICATION
+  governance:
+    gates:
+    - G04
+    - G05
+    evidence:
+      result: evidence/s1/tests/S1-CT-060/result.json
+      request: evidence/s1/tests/S1-CT-060/request.json
+      response: evidence/s1/tests/S1-CT-060/response.json
+      log: evidence/s1/tests/S1-CT-060/execution.log
+      integrity: evidence/s1/tests/S1-CT-060/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-061
+  name: same_idempotency_key_same_request_replayed
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/activate
+  required: true
+  expect:
+    status: 200
+    assertion: same response semantics and no duplicate side effects
+  governance:
+    gates:
+    - G03
+    evidence:
+      result: evidence/s1/tests/S1-CT-061/result.json
+      request: evidence/s1/tests/S1-CT-061/request.json
+      response: evidence/s1/tests/S1-CT-061/response.json
+      log: evidence/s1/tests/S1-CT-061/execution.log
+      integrity: evidence/s1/tests/S1-CT-061/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-062
+  name: same_idempotency_key_changed_request_rejected
+  method: POST
+  path: /api/v1/maintenance/contracts/{contractId}/terminate
+  required: true
+  expect:
+    status: 409
+    errorCode: IDEMPOTENCY_KEY_REUSED
+  governance:
+    gates:
+    - G03
+    - G04
+    evidence:
+      result: evidence/s1/tests/S1-CT-062/result.json
+      request: evidence/s1/tests/S1-CT-062/request.json
+      response: evidence/s1/tests/S1-CT-062/response.json
+      log: evidence/s1/tests/S1-CT-062/execution.log
+      integrity: evidence/s1/tests/S1-CT-062/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-070
+  name: contract_360_tenant_scoped
+  method: GET
+  path: /api/v1/maintenance/contracts/{contractId}/360
+  required: true
+  expect:
+    status: 200
+    assertion: all projections belong to effective tenant
+  governance:
+    gates:
+    - G02
+    - G07
+    evidence:
+      result: evidence/s1/tests/S1-CT-070/result.json
+      request: evidence/s1/tests/S1-CT-070/request.json
+      response: evidence/s1/tests/S1-CT-070/response.json
+      log: evidence/s1/tests/S1-CT-070/execution.log
+      integrity: evidence/s1/tests/S1-CT-070/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-071
+  name: unauthorized_contract_360_denied
+  method: GET
+  path: /api/v1/maintenance/contracts/{contractId}/360
+  required: true
+  expect:
+    status:
+    - 403
+    - 404
+    assertion: no cross-tenant existence disclosure
+  governance:
+    gates:
+    - G02
+    - G04
+    - G07
+    evidence:
+      result: evidence/s1/tests/S1-CT-071/result.json
+      request: evidence/s1/tests/S1-CT-071/request.json
+      response: evidence/s1/tests/S1-CT-071/response.json
+      log: evidence/s1/tests/S1-CT-071/execution.log
+      integrity: evidence/s1/tests/S1-CT-071/sha256.txt
+    requiredEvidenceFields:
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-072
+  name: contract_list_deterministic_ordering
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: With an unchanged dataset and identical page/pageSize/status query, repeated responses preserve the same ordered
+      contract-id sequence and identical pagination meta.
+  governance:
+    gates:
+    - G02
+    - G08
+    evidence:
+      result: evidence/s1/tests/S1-CT-072/result.json
+      request: evidence/s1/tests/S1-CT-072/request.json
+      response: evidence/s1/tests/S1-CT-072/response.json
+      log: evidence/s1/tests/S1-CT-072/execution.log
+      integrity: evidence/s1/tests/S1-CT-072/sha256.txt
+    requiredEvidenceFields: &id001
+    - testId
+    - gateIds
+    - status
+    - startedAtUtc
+    - finishedAtUtc
+    - durationMs
+    - commitSha
+    - runId
+    - environmentId
+    - requestArtifactSha256
+    - responseArtifactSha256
+    - logArtifactSha256
+- id: S1-CT-073
+  name: contract_list_page_boundary_integrity
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: Across adjacent pages over an unchanged dataset, contract IDs do not overlap; repeated traversal preserves
+      the same concatenated sequence and pagination meta remains internally consistent.
+  governance:
+    gates:
+    - G02
+    - G08
+    evidence:
+      result: evidence/s1/tests/S1-CT-073/result.json
+      request: evidence/s1/tests/S1-CT-073/request.json
+      response: evidence/s1/tests/S1-CT-073/response.json
+      log: evidence/s1/tests/S1-CT-073/execution.log
+      integrity: evidence/s1/tests/S1-CT-073/sha256.txt
+    requiredEvidenceFields: *id001
+- id: S1-CT-074
+  name: contract_list_pagination_contract_compliance
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: page and pageSize requests conform to the frozen OpenAPI parameter bounds/defaults and response conforms to
+      MaintenanceContractListResponse/PaginationMeta.
+  governance:
+    gates:
+    - G01
+    - G02
+    - G08
+    evidence:
+      result: evidence/s1/tests/S1-CT-074/result.json
+      request: evidence/s1/tests/S1-CT-074/request.json
+      response: evidence/s1/tests/S1-CT-074/response.json
+      log: evidence/s1/tests/S1-CT-074/execution.log
+      integrity: evidence/s1/tests/S1-CT-074/sha256.txt
+    requiredEvidenceFields: *id001
+errorRegistry:
+  AUTHENTICATION_REQUIRED: 401
+  FORBIDDEN: 403
+  TENANT_SCOPE_VIOLATION: 403
+  ENTITY_OWNERSHIP_VIOLATION: 403
+  CONTRACT_NOT_FOUND: 404
+  SITE_NOT_FOUND: 404
+  SLA_POLICY_NOT_FOUND: 404
+  INVALID_DATES: 422
+  INVALID_VISIT_PLAN: 422
+  CONTRACTOR_NOT_ELIGIBLE: 422
+  CONTRACT_NUMBER_CONFLICT: 409
+  DUPLICATE_CONTRACT_SITE: 409
+  INVALID_SCOPE_CONFIGURATION: 422
+  INVALID_SCOPE_COVERAGE: 422
+  SLA_VERSION_INVALID: 422
+  SLA_VERSION_NOT_EFFECTIVE: 422
+  CONTRACT_NOT_READY: 422
+  ACTIVATION_INVARIANT_FAILED: 422
+  INVALID_STATE_TRANSITION: 409
+  CONCURRENT_MODIFICATION: 409
+  IDEMPOTENCY_KEY_REUSED: 409
+  HISTORICAL_DATA_PROTECTED: 409
+  CONTRACT_SCOPE_AMENDMENT_REQUIRED: 409
+  SLA_AMENDMENT_REQUIRED: 409
+  VALIDATION_FAILED: 422
+  DEPENDENCY_UNAVAILABLE: 503
+unlockRule:
+  IMPLEMENTATION_START_UNLOCK: TRUE only when implementationStartPolicy requirements are satisfied. This authorizes controlled
+    development only.
+  S1_SPECIFICATION: FROZEN only after G01 PASS against the exact canonical spec digest used by CI and final-freeze requirements
+    are satisfied.
+  SPRINT_ACCEPTANCE: PASS only when the sprint-mapped required CTs and ERD invariants are PASS_EVIDENCED with verified evidence
+    and exact commit binding.
+  S2_IMPLEMENTATION_ALLOWED: IMPLEMENTATION_START_UNLOCK == TRUE
+  S2_ACCEPTANCE_UNLOCKED: S1 SPRINT_ACCEPTANCE == PASS
+  OPENAPI_FINAL_FREEZE: TRUE only when openApiFinalFreezePolicy requirements are satisfied.
+  failClosedAcceptance: Any FAIL/BLOCKED/UNKNOWN/MISSING/SKIPPED, governance coverage gap, missing evidence, or SHA-256 mismatch
+    keeps sprint acceptance and final freeze false; it does not revoke a separately valid implementation-start decision.
+governanceBaseline:
+  id: MOSTAOFI-V1.1-S1-GOVERNANCE-MATRIX-001
+  scope: S1
+  decisionModel: SPLIT_START_AND_FAIL_CLOSED_ACCEPTANCE
+  implementationStartRule: Controlled development may start under implementationStartPolicy before runtime CT acceptance evidence
+    exists.
+  acceptanceRule: Every required acceptance gate must be COVERED and PASS; every required mapped CT must PASS with integrity-verifiable
+    evidence.
+  nonPassStates:
+  - FAIL
+  - BLOCKED
+  - UNKNOWN
+  - MISSING
+  - SKIPPED
+  traceability: Requirement -> OpenAPI Rule -> Gate -> Contract Test -> CI Execution -> Evidence Artifact + SHA-256 -> PASS/FAIL
+governanceGates:
+- id: G01
+  key: SCHEMA_VALIDATION
+  name: Schema Validation
+  required: true
+  mappedTests:
+  - S1-CT-001
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-004
+  evidence:
+    gateResult: evidence/s1/gates/G01-schema-validation/gate-result.json
+    testIndex: evidence/s1/gates/G01/test-index.json
+    integrityManifest: evidence/s1/gates/G01/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G02
+  key: REQUEST_RESPONSE_CONFORMANCE
+  name: Request/Response Conformance
+  required: true
+  mappedTests:
+  - S1-CT-001
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-010
+  - S1-CT-011
+  - S1-CT-020
+  - S1-CT-030
+  - S1-CT-040
+  - S1-CT-041
+  - S1-CT-043
+  - S1-CT-070
+  - S1-CT-071
+  evidence:
+    gateResult: evidence/s1/gates/G02-request-response-conformance/gate-result.json
+    testIndex: evidence/s1/gates/G02/test-index.json
+    integrityManifest: evidence/s1/gates/G02/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G03
+  key: LIFECYCLE_IDEMPOTENCY
+  name: Lifecycle + Idempotency
+  required: true
+  mappedTests:
+  - S1-CT-013
+  - S1-CT-041
+  - S1-CT-042
+  - S1-CT-043
+  - S1-CT-044
+  - S1-CT-050
+  - S1-CT-051
+  - S1-CT-052
+  - S1-CT-053
+  - S1-CT-054
+  - S1-CT-061
+  - S1-CT-062
+  evidence:
+    gateResult: evidence/s1/gates/G03-lifecycle-idempotency/gate-result.json
+    testIndex: evidence/s1/gates/G03/test-index.json
+    integrityManifest: evidence/s1/gates/G03/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G04
+  key: CANONICAL_ERROR_REGISTRY
+  name: Canonical Error Registry
+  required: true
+  mappedTests:
+  - S1-CT-002
+  - S1-CT-003
+  - S1-CT-004
+  - S1-CT-011
+  - S1-CT-012
+  - S1-CT-021
+  - S1-CT-022
+  - S1-CT-023
+  - S1-CT-024
+  - S1-CT-032
+  - S1-CT-040
+  - S1-CT-042
+  - S1-CT-054
+  - S1-CT-060
+  - S1-CT-062
+  - S1-CT-071
+  evidence:
+    gateResult: evidence/s1/gates/G04-canonical-error-registry/gate-result.json
+    testIndex: evidence/s1/gates/G04/test-index.json
+    integrityManifest: evidence/s1/gates/G04/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G05
+  key: ETAG_IF_MATCH_CONCURRENCY
+  name: ETag / If-Match Concurrency
+  required: true
+  mappedTests:
+  - S1-CT-060
+  evidence:
+    gateResult: evidence/s1/gates/G05-etag-if-match-concurrency/gate-result.json
+    testIndex: evidence/s1/gates/G05/test-index.json
+    integrityManifest: evidence/s1/gates/G05/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G06
+  key: AMENDMENT_PROTECTION
+  name: Amendment Protection
+  required: true
+  mappedTests:
+  - S1-CT-024
+  - S1-CT-031
+  - S1-CT-032
+  - S1-CT-052
+  - S1-CT-054
+  evidence:
+    gateResult: evidence/s1/gates/G06-amendment-protection/gate-result.json
+    testIndex: evidence/s1/gates/G06/test-index.json
+    integrityManifest: evidence/s1/gates/G06/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G07
+  key: CONTRACT_360_PROJECTION_INTEGRITY
+  name: Contract 360 Projection Integrity
+  required: true
+  mappedTests:
+  - S1-CT-070
+  - S1-CT-071
+  evidence:
+    gateResult: evidence/s1/gates/G07-contract-360-projection-integrity/gate-result.json
+    testIndex: evidence/s1/gates/G07/test-index.json
+    integrityManifest: evidence/s1/gates/G07/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G08
+  key: PAGINATION_DETERMINISM
+  name: Pagination Determinism
+  required: true
+  mappedTests:
+  - S1-CT-072
+  - S1-CT-073
+  - S1-CT-074
+  evidence:
+    gateResult: evidence/s1/gates/G08-pagination-determinism/gate-result.json
+    testIndex: evidence/s1/gates/G08/test-index.json
+    integrityManifest: evidence/s1/gates/G08/manifest.sha256
+  passRule: All mapped required pagination tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+  coverageReason: Closed by formally adopted Test Registry Revision 002; S1-CT-072..074 are additive and existing S1-CT meanings
+    remain unchanged.
+- id: G09
+  key: SLA_POLICY_VERSION_BINDING
+  name: SLA Policy Version Binding
+  required: true
+  mappedTests:
+  - S1-CT-030
+  - S1-CT-031
+  - S1-CT-032
+  evidence:
+    gateResult: evidence/s1/gates/G09-sla-policy-version-binding/gate-result.json
+    testIndex: evidence/s1/gates/G09/test-index.json
+    integrityManifest: evidence/s1/gates/G09/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+- id: G10
+  key: SCOPE_COVERAGE_CONTRACT_VALIDATION
+  name: Scope Coverage Contract Validation
+  required: true
+  mappedTests:
+  - S1-CT-020
+  - S1-CT-021
+  - S1-CT-022
+  - S1-CT-023
+  - S1-CT-024
+  evidence:
+    gateResult: evidence/s1/gates/G10-scope-coverage-contract-validation/gate-result.json
+    testIndex: evidence/s1/gates/G10/test-index.json
+    integrityManifest: evidence/s1/gates/G10/manifest.sha256
+  passRule: All mapped required tests PASS and all required evidence artifacts exist and their SHA-256 values verify.
+  coverageStatus: COVERED
+implementationControlGates:
+- OPENAPI_SCHEMA_VALIDATION
+- REQUEST_RESPONSE_CONFORMANCE
+- STATE_MACHINE_CONFORMANCE
+- RBAC
+- TENANT_ISOLATION
+- ENTITY_OWNERSHIP
+- IDEMPOTENCY
+- OPTIMISTIC_CONCURRENCY
+- AUDIT_EVENT_COVERAGE
+- DOMAIN_EVENT_COVERAGE
+- NEGATIVE_CONTRACT_TESTS
+- MIGRATION_VALIDATION
+evidenceContract:
+  root: evidence/s1
+  requiredRunIdentity:
+  - runId
+  - repository
+  - branch
+  - commitSha
+  - workflowSha
+  - environmentId
+  - runnerIdentity
+  - startedAtUtc
+  - finishedAtUtc
+  artifactIntegrity:
+    algorithm: SHA-256
+    manifest: evidence/s1/integrity/artifact-manifest.json
+    manifestDigest: evidence/s1/integrity/artifact-manifest.sha256
+    rule: Missing artifact, missing digest, or digest mismatch => affected CT FAIL and affected Gate FAIL.
+  gateSummary: evidence/s1/gate-summary.json
+  testSummary: evidence/s1/test-summary.json
+  decisionArtifact: evidence/s1/s1-gate-decision.json
+  implementationStartDecisionArtifact: evidence/s1/implementation-start-decision.json
+  sprintAcceptanceDecisionArtifact: evidence/s1/sprint-acceptance-decision.json
+  openApiFinalFreezeDecisionArtifact: evidence/s1/openapi-final-freeze-decision.json
+testRegistry:
+  revision: '002'
+  policy: Existing S1-CT IDs are immutable in meaning. Revision 002 adds only S1-CT-072..074 for G08 pagination determinism.
+  previousRevision: '001'
+  previousMaxCanonicalId: S1-CT-071
+  maxCanonicalId: S1-CT-074
+  addedTests:
+  - S1-CT-072
+  - S1-CT-073
+  - S1-CT-074
+governanceRevision:
+  id: S1-TEST-REGISTRY-R002
+  status: ADOPTED_FOR_EXECUTION
+  purpose: Close G08 Pagination Determinism coverage gap without changing existing S1-CT-001..071 meanings.
+  authorizationBasis: Explicit user instruction to execute the approved unlock protocol (2026-09-04T08:36:51Z).
+  supersedesTestRegistryRevision: '001'
+  doesNotModifyErdBaseline: true
+  doesNotModifyS1OpenApi: true
+gateSeparationRevision:
+  id: MOSTAOFI-V1.1-GATE-SEPARATION-R001
+  status: ADOPTED_FOR_EXECUTION
+  authorizationBasis: Explicit user instruction to separate implementation start from acceptance (2026-09-04T09:21:24Z).
+  doesNotModifyErdBaseline: true
+  doesNotModifyS1OpenApi: true
+  doesNotModifyContractTestMeaning: true
+canonicalBindings:
+  erd:
+    id: MOSTAOFI-V1.1-ERD-BASELINE-001
+    sha256: cd57b2b76fee1b962e0a16991414181ea4743004b3065de2ef0376b0f93d6f31
+    path: spec/v1.1/Mostaofi-v1.1-Final-ERD-Baseline.md
+  openapiS1:
+    sha256: d5ab6757814cf6a7793c43644f480e862a1c6be1b7af309ecb4126df9de25aa7
+    path: spec/s1/openapi.yaml
+  openapiV11Candidate:
+    id: MOSTAOFI-V1.1-OPENAPI-BASELINE-001
+    sha256: 46e03a0e625927bee92ce5e0ab7981f27654a228f17ab4462c7c9d0715a61d51
+    path: spec/v1.1/Mostaofi-v1.1-OpenAPI-Baseline.yaml
+s0Acceptance:
+  record: governance/v1.1/s0/S0-ACCEPTANCE-RECORD.json
+  certificate: governance/v1.1/s0/S0-ACCEPTANCE-CERTIFICATE.md
+  evidenceIndex: governance/v1.1/s0/S0-EVIDENCE-INDEX.json
+  S0_ACCEPTED: true
+  S1_ACCEPTANCE_AUTHORIZED: true
+  testedCommitSha: e99854862d9b874da9258e8496dbd544e5312605
+  evidenceBundleSha256: 7c95096a098a967805294044076471dc4a8efb1df9f9781b7177ead7a845c9b1
+  sourceBundleSha256: 643eb6a94f309f229531cff6222afe5f24efa55c14f7a6870db62cda2466de11
+  gitBundleSha256: 513582a62efe738c3d8f1e7487f072e8076bab6899dcc0923a1bb2db48cd5ee1
+decisionFormula:
+  S1_PASS: S1_PASS = G01_PASS ∧ G02_PASS ∧ G03_PASS ∧ G04_PASS ∧ G05_PASS ∧ G06_PASS ∧ G07_PASS ∧ G08_PASS ∧ G09_PASS ∧ G10_PASS
+  S2_UNLOCKED: S2_UNLOCKED = S1_PASS
+  failureMode: FAIL_CLOSED
+evidenceRevision: R003

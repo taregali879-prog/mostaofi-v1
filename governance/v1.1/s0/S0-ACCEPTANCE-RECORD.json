@@ -1,0 +1,29 @@
+{
+  "recordId": "MOSTAOFI-V1.1-S0-ACCEPTANCE-RECORD-001",
+  "sprint": "S0",
+  "status": "PASS",
+  "reason": "ALL_S0_ACCEPTANCE_CHECKS_PASS_EVIDENCED",
+  "runId": "MOSTAOFI-S0-ACCEPTANCE-20260904-001",
+  "environmentId": "supabase:qnkxglwgomgjyaacjtus:schema:mostaofi_s0_evidence_20260904_1241",
+  "authorizedCommitSha": "e99854862d9b874da9258e8496dbd544e5312605",
+  "testedCommitSha": "e99854862d9b874da9258e8496dbd544e5312605",
+  "S0_ACCEPTED": true,
+  "S1_ACCEPTANCE_AUTHORIZED": true,
+  "requiredChecks": {
+    "baselineDigests": "PASS",
+    "staticFoundationTests": "PASS",
+    "migrationChainExecution": "PASS",
+    "rlsFailClosedNoTenant": "PASS",
+    "rlsSameTenantReadWrite": "PASS",
+    "rlsCrossTenantDenied": "PASS",
+    "idempotencyUniqueness": "PASS",
+    "auditAppendOnly": "PASS",
+    "domainEventImmutability": "PASS",
+    "regression": "PASS",
+    "evidenceIntegrity": "VERIFIED"
+  },
+  "evidenceBundleSha256": "7c95096a098a967805294044076471dc4a8efb1df9f9781b7177ead7a845c9b1",
+  "sourceBundleSha256": "643eb6a94f309f229531cff6222afe5f24efa55c14f7a6870db62cda2466de11",
+  "gitBundleSha256": "513582a62efe738c3d8f1e7487f072e8076bab6899dcc0923a1bb2db48cd5ee1",
+  "governanceRule": "S0_ACCEPTED only when all executable S0 checks PASS_EVIDENCED, evidence integrity VERIFIED, and testedCommitSha == authorizedCommitSha."
+}

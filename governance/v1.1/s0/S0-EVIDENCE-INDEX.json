@@ -1,0 +1,105 @@
+{
+  "indexId": "MOSTAOFI-V1.1-S0-EVIDENCE-INDEX-001",
+  "runId": "MOSTAOFI-S0-ACCEPTANCE-20260904-001",
+  "status": "VERIFIED",
+  "bundles": {
+    "evidence": {
+      "file": "mostaofi-v1.1-s0-acceptance-evidence.zip",
+      "sha256": "7c95096a098a967805294044076471dc4a8efb1df9f9781b7177ead7a845c9b1",
+      "sizeBytes": 10347
+    },
+    "source": {
+      "file": "mostaofi-v1.1-s0-foundation-source.zip",
+      "sha256": "643eb6a94f309f229531cff6222afe5f24efa55c14f7a6870db62cda2466de11",
+      "sizeBytes": 202780
+    },
+    "gitBundle": {
+      "file": "mostaofi-v1.1-s0-foundation.gitbundle",
+      "sha256": "513582a62efe738c3d8f1e7487f072e8076bab6899dcc0923a1bb2db48cd5ee1",
+      "sizeBytes": 169549
+    }
+  },
+  "evidenceArtifacts": [
+    {
+      "path": "FINAL-SHA256SUMS.txt",
+      "sha256": "c4d71af38dea241fc172b3b5e84c4d766aa59cd99fc60994820d7bfd44e7b54c",
+      "sizeBytes": 632
+    },
+    {
+      "path": "README.md",
+      "sha256": "011622a1570d23a38fbe7018c6c0ea8662f906e4f2a540c9abbe3df4b361cb73",
+      "sizeBytes": 1221
+    },
+    {
+      "path": "acceptance-decision.exit-code",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "sizeBytes": 2
+    },
+    {
+      "path": "acceptance-decision.json",
+      "sha256": "6a8ab5f85941bc748105cc9acd0ae7f20ab16f0d5b25b40731f0ea425666aea1",
+      "sizeBytes": 847
+    },
+    {
+      "path": "acceptance-input.json",
+      "sha256": "d3e13a401b9e4aae0b6dbf7f02770c57a24e7d7a75a101157df6d87b96387355",
+      "sizeBytes": 705
+    },
+    {
+      "path": "baseline-digests.sha256",
+      "sha256": "89b04bb654b38c71fa3136cc540386fd785da3c84e5388ddd0c526e177980036",
+      "sizeBytes": 357
+    },
+    {
+      "path": "branch-attempt.json",
+      "sha256": "1403edf6b1de4d4bbb7a5fb2562b431e36a5395a41f4c65f034f63ea80c0819e",
+      "sizeBytes": 359
+    },
+    {
+      "path": "cleanup-evidence.json",
+      "sha256": "8d84df4e61db1cccd66a2fd22e36d7eb745668afaf1a9fbc08c75ea656e75f89",
+      "sizeBytes": 229
+    },
+    {
+      "path": "db-execution-evidence.json",
+      "sha256": "8d43461762d1f9f8205cf9e2c41f70f334191a4b44b4f8a680f36a01f8b062d2",
+      "sizeBytes": 2509
+    },
+    {
+      "path": "evidence-integrity-verification.log",
+      "sha256": "98ee789d74a008b7707852979e8b650e7e27a0450e6bed84d741f2f2d044facd",
+      "sizeBytes": 167
+    },
+    {
+      "path": "evidence-manifest.sha256",
+      "sha256": "0e93135ff6f183d4ed5671a0c644fc3f64c90c273266264d60906e1ee83f4511",
+      "sizeBytes": 601
+    },
+    {
+      "path": "final-integrity-verification.log",
+      "sha256": "a01820089cfdef32f8ec9f6fcc6a0657287e413af1536889fa51810094508957",
+      "sizeBytes": 198
+    },
+    {
+      "path": "git-identity.log",
+      "sha256": "a9d123feea19e5cb65c12ee80281cc5300c792b13e70f9773df29279b52e63d2",
+      "sizeBytes": 150
+    },
+    {
+      "path": "regression-tests.log",
+      "sha256": "0aebb12327e135dce9ed030b45971d011e6c96ad3c26b5f8ae994e53ba5e6ea5",
+      "sizeBytes": 4107
+    },
+    {
+      "path": "smoke.log",
+      "sha256": "e8c6c637a276fe44f3048c6e3b2d7efbe5c7596a81639aab7d068ca648e2b73b",
+      "sizeBytes": 714
+    },
+    {
+      "path": "static-s0-tests.log",
+      "sha256": "46539f5e3f0e22ca4366b22eb9bb5216959f901a5f6b40dde4359a96d045451a",
+      "sizeBytes": 2452
+    }
+  ],
+  "acceptedCommitSha": "e99854862d9b874da9258e8496dbd544e5312605"
+}
