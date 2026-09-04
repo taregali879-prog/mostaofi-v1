@@ -1,4 +1,4 @@
-manifestVersion: '2.2'
+manifestVersion: '2.3'
 name: Mostaofi v1.1 S1 Governance + CI Contract-Test Manifest — Registry R002
 specification: mostaofi-v1.1-s1-openapi-FROZEN.yaml
 status: FROZEN_SPECIFICATION_CANDIDATE
@@ -11,7 +11,42 @@ failurePolicy:
   - UNKNOWN
   - MISSING
   - SKIPPED
-  rule: Every required gate and required test must PASS. Any other state keeps S2 locked.
+  rule: Every required acceptance gate and required test must PASS for sprint acceptance/final freeze. Non-PASS runtime states do not by themselves block controlled implementation start.
+implementationStartPolicy:
+  revision: MOSTAOFI-V1.1-GATE-SEPARATION-R001
+  purpose: Authorize controlled S0-S10 implementation without pretending runtime acceptance evidence already exists.
+  requires:
+  - ERD baseline frozen and exact digest verified
+  - OpenAPI candidate exact digest bound and static validation PASS
+  - no baseline drift
+  - source commit bound and working tree clean
+  - Test Registry R002 adopted with complete gate coverage
+  - governance audit PASS
+  - development toolchain ready
+  doesNotRequire:
+  - G01..G10 runtime PASS
+  - all Contract Tests PASS_EVIDENCED
+  effect: Allows development only; does not authorize sprint acceptance, OpenAPI final freeze, release, deployment, or pilot.
+sprintAcceptancePolicy:
+  failureMode: fail-closed
+  requires:
+  - all required Contract Tests mapped to the sprint PASS_EVIDENCED
+  - relevant ERD DB/integration invariants PASS_EVIDENCED
+  - evidence integrity VERIFIED
+  - tested commit equals authorized commit
+  - governance audit PASS
+  - no baseline drift
+openApiFinalFreezePolicy:
+  failureMode: fail-closed
+  requires:
+  - all adopted Contract Tests PASS_EVIDENCED
+  - G01..G10 PASS
+  - all required ERD DB/integration invariants PASS_EVIDENCED
+  - evidence integrity VERIFIED
+  - tested commit equals authorized commit
+  - governance audit PASS
+  - no baseline drift
+  effect: Freezes the OpenAPI candidate only; release/pilot still requires the separate release governance decision.
 tests:
 - id: S1-CT-001
   name: create_contract_success
@@ -1071,16 +1106,19 @@ errorRegistry:
   VALIDATION_FAILED: 422
   DEPENDENCY_UNAVAILABLE: 503
 unlockRule:
-  S1_SPECIFICATION: FROZEN only after G01 PASS against the exact canonical spec digest used by CI.
-  S1_IMPLEMENTATION: PASS only when G01..G10 are PASS and all required CTs are PASS with verified evidence.
-  S2_UNLOCKED: S1_IMPLEMENTATION == PASS
-  failClosed: Any FAIL/BLOCKED/UNKNOWN/MISSING/SKIPPED, governance coverage gap, missing evidence, or SHA-256 mismatch keeps
-    S2_UNLOCKED=false.
+  IMPLEMENTATION_START_UNLOCK: TRUE only when implementationStartPolicy requirements are satisfied. This authorizes controlled development only.
+  S1_SPECIFICATION: FROZEN only after G01 PASS against the exact canonical spec digest used by CI and final-freeze requirements are satisfied.
+  SPRINT_ACCEPTANCE: PASS only when the sprint-mapped required CTs and ERD invariants are PASS_EVIDENCED with verified evidence and exact commit binding.
+  S2_IMPLEMENTATION_ALLOWED: IMPLEMENTATION_START_UNLOCK == TRUE
+  S2_ACCEPTANCE_UNLOCKED: S1 SPRINT_ACCEPTANCE == PASS
+  OPENAPI_FINAL_FREEZE: TRUE only when openApiFinalFreezePolicy requirements are satisfied.
+  failClosedAcceptance: Any FAIL/BLOCKED/UNKNOWN/MISSING/SKIPPED, governance coverage gap, missing evidence, or SHA-256 mismatch keeps sprint acceptance and final freeze false; it does not revoke a separately valid implementation-start decision.
 governanceBaseline:
   id: MOSTAOFI-V1.1-S1-GOVERNANCE-MATRIX-001
   scope: S1
-  decisionModel: FAIL_CLOSED
-  rule: Every G01..G10 gate must be COVERED and PASS; every required mapped CT must PASS with integrity-verifiable evidence.
+  decisionModel: SPLIT_START_AND_FAIL_CLOSED_ACCEPTANCE
+  implementationStartRule: Controlled development may start under implementationStartPolicy before runtime CT acceptance evidence exists.
+  acceptanceRule: Every required acceptance gate must be COVERED and PASS; every required mapped CT must PASS with integrity-verifiable evidence.
   nonPassStates:
   - FAIL
   - BLOCKED
@@ -1297,6 +1335,9 @@ evidenceContract:
   gateSummary: evidence/s1/gate-summary.json
   testSummary: evidence/s1/test-summary.json
   decisionArtifact: evidence/s1/s1-gate-decision.json
+  implementationStartDecisionArtifact: evidence/s1/implementation-start-decision.json
+  sprintAcceptanceDecisionArtifact: evidence/s1/sprint-acceptance-decision.json
+  openApiFinalFreezeDecisionArtifact: evidence/s1/openapi-final-freeze-decision.json
 testRegistry:
   revision: '002'
   policy: Existing S1-CT IDs are immutable in meaning. Revision 002 adds only S1-CT-072..074 for G08 pagination determinism.
@@ -1315,3 +1356,11 @@ governanceRevision:
   supersedesTestRegistryRevision: '001'
   doesNotModifyErdBaseline: true
   doesNotModifyS1OpenApi: true
+
+gateSeparationRevision:
+  id: MOSTAOFI-V1.1-GATE-SEPARATION-R001
+  status: ADOPTED_FOR_EXECUTION
+  authorizationBasis: Explicit user instruction to separate implementation start from acceptance (2026-09-04T09:21:24Z).
+  doesNotModifyErdBaseline: true
+  doesNotModifyS1OpenApi: true
+  doesNotModifyContractTestMeaning: true

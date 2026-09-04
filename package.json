@@ -21,7 +21,8 @@
     "perf:smoke": "node scripts/perf-smoke.mjs",
     "pilot:monitor": "node scripts/pilot-monitor.mjs",
     "release:decision": "node scripts/release-decision.mjs",
-    "release:attest": "node scripts/generate-release-attestation.mjs"
+    "release:attest": "node scripts/generate-release-attestation.mjs",
+    "governance:implementation-gates": "node scripts/evaluate-implementation-gates.mjs"
   },
   "engines": {
     "node": ">=22"

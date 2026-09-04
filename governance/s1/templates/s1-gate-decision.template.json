@@ -1,4 +1,17 @@
 {
+  "decisionModel": "MOSTAOFI-V1.1-GATE-SEPARATION-R001",
+  "implementationStart": {
+    "unlocked": false,
+    "blockers": [],
+    "scope": "CONTROLLED_DEVELOPMENT_ONLY",
+    "releaseAuthorized": false
+  },
+  "sprintAcceptance": {
+    "sprint": "S0|S1|S2|S3|S4|S5|S6|S7|S8|S9|S10",
+    "accepted": false,
+    "blockers": []
+  },
+  "openApiFinalFreeze": false,
   "s1Specification": "FROZEN_CANDIDATE|FROZEN",
   "s1Implementation": "PASS|NOT_PASS",
   "s2Unlocked": false,
@@ -14,8 +27,7 @@
     "G09": "UNKNOWN",
     "G10": "UNKNOWN"
   },
-  "rule": "S1_PASS = G01 && G02 && G03 && G04 && G05 && G06 && G07 && G08 && G09 && G10",
-  "failClosed": true,
+  "failClosedAcceptance": true,
   "runId": "ci-run-id",
   "commitSha": "40-char-full-git-sha",
   "specSha256": "sha256",
