@@ -1,0 +1,34 @@
+{
+  "testId": "S1-CT-XXX",
+  "gateIds": [
+    "GXX"
+  ],
+  "status": "PASS|FAIL|BLOCKED|UNKNOWN|MISSING|SKIPPED",
+  "startedAtUtc": "YYYY-MM-DDTHH:MM:SSZ",
+  "finishedAtUtc": "YYYY-MM-DDTHH:MM:SSZ",
+  "durationMs": 0,
+  "runId": "ci-run-id",
+  "repository": "owner/repo",
+  "branch": "branch-name",
+  "commitSha": "40-char-full-git-sha",
+  "workflowSha": "40-char-workflow-sha",
+  "environmentId": "environment-identifier",
+  "runnerIdentity": "runner-image-or-identity",
+  "requestId": "uuid-if-applicable",
+  "correlationId": "uuid-if-applicable",
+  "traceId": "trace-id-if-applicable",
+  "requestArtifact": "request.json",
+  "responseArtifact": "response.json",
+  "logArtifact": "execution.log",
+  "requestArtifactSha256": "sha256",
+  "responseArtifactSha256": "sha256",
+  "logArtifactSha256": "sha256",
+  "assertions": [],
+  "observed": {},
+  "review": {
+    "reviewer": null,
+    "reviewedAtUtc": null,
+    "decision": null,
+    "note": null
+  }
+}

@@ -43,3 +43,6 @@ BOQ Versioning & Approval implemented. Test Ready preflight passes for repositor
 
 ## v0.5.0-rc1
 Implements the S4–S8 MVP backend baseline (Procurement, PO, Delivery, Inventory and Material KPI), full E2E specification, CI gate, pilot console and verification evidence. The release remains RC/BLOCKED until package-lock generation and full PostgreSQL/MinIO CI pass on a network-enabled runner.
+
+## v0.5.0-rc2 — Test Ready / release hardening
+This release candidate adds a one-time lockfile bootstrap workflow, fail-closed runner preflight, reproducible CI/release gates, SQL reconciliation, pilot health monitoring, release evidence packaging, security/access checklist and rollback controls. Do not create `v1.0.0-mvp` outside the green `Release MVP` workflow.

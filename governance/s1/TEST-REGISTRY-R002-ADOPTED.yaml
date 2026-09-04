@@ -1,0 +1,42 @@
+revision: '002'
+id: S1-TEST-REGISTRY-R002
+status: ADOPTED_FOR_EXECUTION
+authorizationBasis: 'Explicit user instruction: "نفذ ذلك" on 2026-09-04T08:36:51Z.'
+reason: Close G08 Pagination Determinism coverage gap.
+immutabilityRule: S1-CT-001..071 meanings remain unchanged in the derived manifest; only 072..074 are added.
+addedTests:
+- id: S1-CT-072
+  name: contract_list_deterministic_ordering
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: With an unchanged dataset and identical page/pageSize/status query, repeated responses preserve the same ordered
+      contract-id sequence and identical pagination meta.
+- id: S1-CT-073
+  name: contract_list_page_boundary_integrity
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: Across adjacent pages over an unchanged dataset, contract IDs do not overlap; repeated traversal preserves
+      the same concatenated sequence and pagination meta remains internally consistent.
+- id: S1-CT-074
+  name: contract_list_pagination_contract_compliance
+  method: GET
+  path: /api/v1/maintenance/contracts
+  required: true
+  expect:
+    status: 200
+    assertion: page and pageSize requests conform to the frozen OpenAPI parameter bounds/defaults and response conforms to
+      MaintenanceContractListResponse/PaginationMeta.
+g08Mapping:
+- S1-CT-072
+- S1-CT-073
+- S1-CT-074
+erdBaseline: MOSTAOFI-V1.1-ERD-BASELINE-001
+erdBaselineChange: false
+s1OpenApiChange: false
+sourceProposal: TEST-REGISTRY-R002-PROPOSAL.yaml

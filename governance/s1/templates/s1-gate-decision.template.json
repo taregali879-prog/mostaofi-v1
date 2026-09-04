@@ -1,0 +1,23 @@
+{
+  "s1Specification": "FROZEN_CANDIDATE|FROZEN",
+  "s1Implementation": "PASS|NOT_PASS",
+  "s2Unlocked": false,
+  "gates": {
+    "G01": "UNKNOWN",
+    "G02": "UNKNOWN",
+    "G03": "UNKNOWN",
+    "G04": "UNKNOWN",
+    "G05": "UNKNOWN",
+    "G06": "UNKNOWN",
+    "G07": "UNKNOWN",
+    "G08": "UNKNOWN",
+    "G09": "UNKNOWN",
+    "G10": "UNKNOWN"
+  },
+  "rule": "S1_PASS = G01 && G02 && G03 && G04 && G05 && G06 && G07 && G08 && G09 && G10",
+  "failClosed": true,
+  "runId": "ci-run-id",
+  "commitSha": "40-char-full-git-sha",
+  "specSha256": "sha256",
+  "manifestSha256": "sha256"
+}

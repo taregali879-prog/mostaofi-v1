@@ -1,0 +1,11 @@
+revision: 002-PROPOSED
+status: NOT_ADOPTED
+reason: Close G08 Pagination Determinism coverage gap
+proposedTests:
+- id: S1-CT-072
+  name: contract_list_deterministic_ordering
+- id: S1-CT-073
+  name: contract_list_page_boundary_integrity
+- id: S1-CT-074
+  name: contract_list_pagination_contract_compliance
+effect: No effect until formally approved and merged as Test Registry Revision 002.

@@ -1,4 +1,18 @@
--- Run after the full E2E scenario. Replace :project_id with the generated UUID.
+\set ON_ERROR_STOP on
+
+SELECT id AS project_id
+FROM projects
+WHERE name='MVP Pilot Fire Project'
+ORDER BY created_at DESC
+LIMIT 1
+\gset
+
+\if :{?project_id}
+\else
+  \echo 'FAIL no MVP pilot project found'
+  \quit 20
+\endif
+
 SELECT id,email,created_at FROM users WHERE email='admin@partner.local';
 SELECT id,user_id,organization_id,revoked_at,expires_at FROM auth_sessions ORDER BY created_at DESC LIMIT 5;
 SELECT id,organization_id,name,status FROM projects WHERE id=:'project_id';
@@ -16,3 +30,18 @@ SELECT movement_type,boq_item_id,quantity,unit_cost,reference_type,reference_id,
 FROM inventory_movements WHERE project_id=:'project_id' ORDER BY occurred_at;
 SELECT event,entity_type,entity_id,occurred_at,metadata FROM audit_events
 WHERE entity_type='project' AND entity_id=:'project_id' ORDER BY occurred_at;
+
+DO $$
+DECLARE p uuid; n int;
+BEGIN
+ SELECT id INTO p FROM projects WHERE name='MVP Pilot Fire Project' ORDER BY created_at DESC LIMIT 1;
+ IF p IS NULL THEN RAISE EXCEPTION 'MVP project missing'; END IF;
+ SELECT count(*) INTO n FROM boqs WHERE project_id=p AND status='APPROVED'; IF n<1 THEN RAISE EXCEPTION 'approved BOQ missing'; END IF;
+ SELECT count(*) INTO n FROM rfqs WHERE project_id=p AND status='AWARDED'; IF n<1 THEN RAISE EXCEPTION 'awarded RFQ missing'; END IF;
+ SELECT count(*) INTO n FROM purchase_orders WHERE project_id=p AND status IN ('APPROVED','PARTIALLY_DELIVERED','FULLY_DELIVERED','CLOSED'); IF n<1 THEN RAISE EXCEPTION 'approved PO missing'; END IF;
+ SELECT count(*) INTO n FROM deliveries WHERE project_id=p AND status IN ('PARTIALLY_ACCEPTED','ACCEPTED'); IF n<1 THEN RAISE EXCEPTION 'accepted delivery missing'; END IF;
+ SELECT count(*) INTO n FROM inventory_movements WHERE project_id=p AND movement_type='PURCHASE_RECEIPT'; IF n<1 THEN RAISE EXCEPTION 'inventory receipt missing'; END IF;
+ SELECT count(*) INTO n FROM audit_events WHERE entity_type='project' AND entity_id=p; IF n<10 THEN RAISE EXCEPTION 'insufficient audit events: %',n; END IF;
+END $$;
+
+\echo 'SQL_VERIFICATION=PASS project=' :project_id

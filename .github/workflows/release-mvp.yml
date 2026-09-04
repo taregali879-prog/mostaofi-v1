@@ -1,0 +1,160 @@
+name: Release MVP
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact MVP release tag
+        required: true
+        default: v1.0.0-mvp
+      human_approval:
+        description: Human release decision. Automated gates can never be overridden.
+        required: true
+        type: choice
+        options: [NO-GO, GO]
+        default: NO-GO
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: mvp-release
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: muqawil
+          POSTGRES_PASSWORD: muqawil
+          POSTGRES_DB: muqawil_partner
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U muqawil -d muqawil_partner"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NODE_ENV: test
+      DEPLOY_ENV: pilot
+      RELEASE_VERSION: ${{ inputs.version }}
+      HUMAN_APPROVAL: ${{ inputs.human_approval }}
+      DATABASE_URL: postgresql://muqawil:muqawil@localhost:5432/muqawil_partner
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: muqawil-documents
+      S3_ACCESS_KEY: muqawil
+      S3_SECRET_KEY: release-ci-minio-secret
+      JWT_ACCESS_SECRET: release-ci-access-secret
+      JWT_REFRESH_SECRET: release-ci-refresh-secret
+      WEB_URL: http://127.0.0.1:3000
+      PORT: 4000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Establish immutable run identity
+        run: |
+          echo "RELEASE_RUN_ID=mvp-release/pilot/$(date -u +%Y%m%dT%H%M%SZ)/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          printf 'commit_sha=%s\nrun_id=%s\n' "$GITHUB_SHA" "mvp-release/pilot/$(date -u +%Y%m%dT%H%M%SZ)/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+      - name: Validate release request
+        run: |
+          test "$RELEASE_VERSION" = "v1.0.0-mvp" || { echo "Only v1.0.0-mvp is permitted by this contract"; exit 2; }
+          test "$HUMAN_APPROVAL" = "GO" || { echo "Human approval is not GO; effective decision is NO-GO"; exit 3; }
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git cat-file -e "$GITHUB_SHA^{commit}"
+          git rev-parse "$RELEASE_VERSION" >/dev/null 2>&1 && { echo "Tag already exists"; exit 4; } || true
+
+      - name: Require reproducible dependency lock
+        run: test -f package-lock.json || { echo 'package-lock.json missing; run Bootstrap npm lockfile once.'; exit 5; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Ensure PostgreSQL client
+        run: command -v psql >/dev/null || { sudo apt-get update && sudo apt-get install -y postgresql-client; }
+
+      - name: Runner preflight
+        run: ./scripts/runner-preflight.sh
+
+      - name: Start MinIO and bucket
+        run: |
+          docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER="$S3_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" minio/minio:latest server /data
+          for i in {1..30}; do curl -fsS "$S3_ENDPOINT/minio/health/live" && break || sleep 2; done
+          curl -fsS "$S3_ENDPOINT/minio/health/live"
+          docker run --rm --network host --entrypoint /bin/sh minio/mc:latest -c "mc alias set local $S3_ENDPOINT $S3_ACCESS_KEY $S3_SECRET_KEY && mc mb --ignore-existing local/$S3_BUCKET"
+
+      - name: Execute nine-gate automated core
+        run: ./scripts/release-gate.sh
+
+      - name: Package immutable release evidence
+        run: |
+          mkdir -p release-artifacts/runtime
+          cp -R evidence/runtime/. release-artifacts/runtime/
+          cp evidence/PILOT_PLAN.md evidence/PILOT_CHECKLIST.md evidence/ROLLBACK_RUNBOOK.md evidence/TEST_READY_REPORT.md release-artifacts/
+          git rev-parse HEAD > release-artifacts/commit-sha.txt
+          node -v > release-artifacts/node-version.txt
+          npm -v > release-artifacts/npm-version.txt
+          docker --version > release-artifacts/docker-version.txt
+          git status --porcelain=v1 > release-artifacts/git-status.txt
+          docker inspect postgres:18 --format='{{json .RepoDigests}}' > release-artifacts/postgres-image-digest.json || true
+          docker inspect minio/minio:latest --format='{{json .RepoDigests}}' > release-artifacts/minio-image-digest.json || true
+          node scripts/generate-artifact-manifest.mjs release-artifacts release-artifacts/artifact-manifest.json
+
+      - uses: sigstore/cosign-installer@v3
+
+      - name: Sign and verify artifact manifest
+        run: |
+          STARTED="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
+          set -o pipefail
+          {
+            sha256sum release-artifacts/artifact-manifest.json
+            cosign sign-blob --yes --bundle release-artifacts/artifact-manifest.bundle release-artifacts/artifact-manifest.json
+            cosign verify-blob \
+              --bundle release-artifacts/artifact-manifest.bundle \
+              --certificate-identity-regexp "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release-mvp.yml@.+" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              release-artifacts/artifact-manifest.json
+          } | tee evidence/runtime/artifacts_signing.log
+          COMPLETED="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
+          node scripts/record-gate.mjs artifacts_signing PASS 0 "$STARTED" "$COMPLETED" evidence/runtime/artifacts_signing.log
+          cp evidence/runtime/gates/artifacts_signing.json release-artifacts/runtime/gates/
+
+      - name: Generate signed attestation ledger
+        run: |
+          node scripts/generate-release-attestation.mjs
+          cosign sign-blob --yes --bundle release-artifacts/release-attestation.bundle release-artifacts/release-attestation.json
+          cosign verify-blob \
+            --bundle release-artifacts/release-attestation.bundle \
+            --certificate-identity-regexp "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release-mvp.yml@.+" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            release-artifacts/release-attestation.json
+
+      - name: Enforce Effective Release Decision
+        env:
+          ATTESTATION_SIGNATURE_VERIFIED: 'true'
+        run: node scripts/release-decision.mjs release-artifacts/release-attestation.json | tee release-artifacts/release-decision.log
+
+      - name: Create tag only after signed RELEASE GO
+        run: |
+          test "$(node -p "JSON.parse(require('fs').readFileSync('release-artifacts/release-attestation.json','utf8')).effective_release_decision")" = "RELEASE GO"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$RELEASE_VERSION" "$GITHUB_SHA" -m "MVP release $RELEASE_VERSION; signed attestation verified; run $RELEASE_RUN_ID"
+          git push origin "$RELEASE_VERSION"
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.version }}-release-evidence-${{ github.run_id }}
+          path: |
+            release-artifacts
+            evidence/runtime
+          if-no-files-found: warn
+          retention-days: 90

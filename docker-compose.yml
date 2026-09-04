@@ -2,27 +2,30 @@ services:
   postgres:
     image: postgres:18
     environment:
-      POSTGRES_USER: muqawil
-      POSTGRES_PASSWORD: muqawil
-      POSTGRES_DB: muqawil_partner
-    ports: ["5432:5432"]
+      POSTGRES_USER: ${POSTGRES_USER:-muqawil}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-muqawil_partner}
+    ports: ["127.0.0.1:5432:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U muqawil -d muqawil_partner"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-muqawil} -d ${POSTGRES_DB:-muqawil_partner}"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 12
+    restart: unless-stopped
   redis:
     image: redis:8.2-alpine
-    ports: ["6379:6379"]
+    ports: ["127.0.0.1:6379:6379"]
+    restart: unless-stopped
   minio:
     image: minio/minio:latest
     command: server /data --console-address :9001
     environment:
-      MINIO_ROOT_USER: muqawil
-      MINIO_ROOT_PASSWORD: change-me
-    ports: ["9000:9000", "9001:9001"]
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY must be set}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY must be set}
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
     volumes: ["miniodata:/data"]
+    restart: unless-stopped
 volumes:
   pgdata:
   miniodata:

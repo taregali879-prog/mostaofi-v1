@@ -1,11 +1,17 @@
 name: CI
+
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:18
@@ -16,45 +22,84 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U muqawil -d muqawil_partner"
-          --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-interval 5s --health-timeout 5s --health-retries 12
     env:
+      NODE_ENV: test
       DATABASE_URL: postgresql://muqawil:muqawil@localhost:5432/muqawil_partner
-      S3_ENDPOINT: http://localhost:9000
+      S3_ENDPOINT: http://127.0.0.1:9000
       S3_REGION: us-east-1
       S3_BUCKET: muqawil-documents
       S3_ACCESS_KEY: muqawil
-      S3_SECRET_KEY: change-me
-      JWT_ACCESS_SECRET: ci-access-secret-change-me
-      JWT_REFRESH_SECRET: ci-refresh-secret-change-me
+      S3_SECRET_KEY: ci-minio-secret
+      JWT_ACCESS_SECRET: ci-access-secret-not-for-production
+      JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production
+      WEB_URL: http://127.0.0.1:3000
       PORT: 4000
     steps:
       - uses: actions/checkout@v4
+      - name: Require committed lockfile
+        run: test -f package-lock.json || { echo 'Run Bootstrap npm lockfile workflow first.'; exit 2; }
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Ensure PostgreSQL client
+        run: command -v psql >/dev/null || { sudo apt-get update && sudo apt-get install -y postgresql-client; }
+      - name: Runner preflight
+        run: ./scripts/runner-preflight.sh
       - name: Start MinIO
-        run: docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=muqawil -e MINIO_ROOT_PASSWORD=change-me minio/minio:latest server /data
+        run: docker run -d --name minio --health-cmd='curl -f http://localhost:9000/minio/health/live || exit 1' --health-interval=5s --health-timeout=3s --health-retries=12 -p 9000:9000 -e MINIO_ROOT_USER="$S3_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" minio/minio:latest server /data
       - name: Wait for MinIO and create bucket
         run: |
-          for i in {1..30}; do curl -fsS http://127.0.0.1:9000/minio/health/live && break || sleep 2; done
-          docker run --rm --network host --entrypoint /bin/sh minio/mc -c "mc alias set local http://127.0.0.1:9000 muqawil change-me && mc mb --ignore-existing local/muqawil-documents"
-      - run: npm ci
-      - run: npm run test:local
-      - run: npm run db:generate
-      - run: npm run db:migrate
-      - run: psql "$DATABASE_URL" -f database/seed.sql
-      - run: npm run test:e2e
-      - run: npm run build
-      - name: API performance smoke
+          for i in {1..30}; do curl -fsS "$S3_ENDPOINT/minio/health/live" && break || sleep 2; done
+          curl -fsS "$S3_ENDPOINT/minio/health/live"
+          docker run --rm --network host --entrypoint /bin/sh minio/mc:latest -c "mc alias set local $S3_ENDPOINT $S3_ACCESS_KEY $S3_SECRET_KEY && mc mb --ignore-existing local/$S3_BUCKET"
+      - name: Install dependencies
+        run: npm ci --no-audit --fund=false
+      - name: Local validation
+        run: npm run test:local
+      - name: Prisma generate
+        run: npm run db:generate
+      - name: Apply migrations
+        run: npm run db:migrate
+      - name: Seed database
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/seed.sql
+      - name: Full MVP HTTP E2E
+        run: npm run test:e2e
+      - name: Build API and Web
+        run: npm run build
+      - name: Start API for smoke/performance
         run: |
-          node apps/api/dist/main.js > /tmp/muqawil-api.log 2>&1 & echo $! > /tmp/api.pid
-          for i in {1..30}; do curl -fsS http://127.0.0.1:4000/api/v1/health/ready && break || sleep 2; done
-          npm run perf:smoke
-          kill $(cat /tmp/api.pid)
-      - name: Upload server log on failure
-        if: failure()
+          mkdir -p evidence/runtime
+          node apps/api/dist/main.js > evidence/runtime/api.log 2>&1 &
+          echo $! > evidence/runtime/api.pid
+          for i in {1..45}; do curl -fsS http://127.0.0.1:4000/api/v1/health/ready && break || sleep 2; done
+          curl -fsS http://127.0.0.1:4000/api/v1/health/ready
+      - name: API performance smoke
+        run: npm run perf:smoke
+      - name: SQL reconciliation
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f evidence/verify_mvp.sql | tee evidence/runtime/sql-verification.log
+      - name: Pilot monitor smoke
+        env:
+          PILOT_MONITOR_REQUESTS: 5
+          PILOT_MONITOR_INTERVAL_MS: 100
+          PILOT_MAX_P95_MS: 800
+          PILOT_MIN_AVAILABILITY: 1
+        run: node scripts/pilot-monitor.mjs
+      - name: Capture container evidence
+        if: always()
+        run: |
+          mkdir -p evidence/runtime
+          docker ps -a > evidence/runtime/docker-ps.txt || true
+          docker logs minio > evidence/runtime/minio.log 2>&1 || true
+          docker inspect postgres:18 --format='{{json .RepoDigests}}' > evidence/runtime/postgres-image-digest.json || true
+          docker inspect minio/minio:latest --format='{{json .RepoDigests}}' > evidence/runtime/minio-image-digest.json || true
+      - name: Upload CI evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: api-server-log
-          path: /tmp/muqawil-api.log
+          name: ci-evidence-${{ github.sha }}
+          path: evidence/runtime
+          if-no-files-found: warn
+          retention-days: 30

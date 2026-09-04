@@ -1,0 +1,73 @@
+{
+  "gateId": "G01",
+  "name": "Schema Validation",
+  "status": "BLOCKED",
+  "coverageStatus": "COVERED",
+  "startedAtUtc": "2026-09-03T04:26:05.451404Z",
+  "finishedAtUtc": "2026-09-03T04:26:05.451404Z",
+  "repositorySnapshot": "muqawil-partner-execution-v0.5.0-rc3(3).zip",
+  "repositorySnapshotSha256": "bf6cee90c6bc90b3965217602bc91578622e2c521d1004290181d99287a76b66",
+  "commitSha": "MISSING",
+  "specPath": "spec/s1/openapi.yaml",
+  "specSha256": "d5ab6757814cf6a7793c43644f480e862a1c6be1b7af309ecb4126df9de25aa7",
+  "manifestPath": "governance/s1/ci-manifest.yaml",
+  "manifestSha256": "7e7299283e0942677c1e95b609aa077d6f3b3ea79d68161152e37abff18a81db",
+  "checks": [
+    {
+      "check": "YAML_SYNTAX",
+      "status": "PASS",
+      "detail": "PyYAML parsed canonical OpenAPI YAML successfully."
+    },
+    {
+      "check": "MANIFEST_YAML_SYNTAX",
+      "status": "PASS",
+      "detail": "Governance manifest YAML parsed successfully."
+    },
+    {
+      "check": "OPENAPI_VERSION_DECLARED",
+      "status": "PASS",
+      "detail": "3.0.3"
+    },
+    {
+      "check": "INFO_PRESENT",
+      "status": "PASS",
+      "detail": "info.title/info.version"
+    },
+    {
+      "check": "PATHS_PRESENT",
+      "status": "PASS",
+      "detail": "paths=16"
+    },
+    {
+      "check": "REQUEST_ADDITIONAL_PROPERTIES_FALSE",
+      "status": "PASS",
+      "detail": "all request object schemas closed"
+    },
+    {
+      "check": "CANONICAL_ERROR_ENVELOPE_STATIC",
+      "status": "PASS",
+      "detail": "properties=['code', 'correlationId', 'details', 'message', 'requestId', 'status']"
+    },
+    {
+      "check": "TENANT_CONTEXT_NOT_AUTHORITY_STATIC",
+      "status": "PASS",
+      "detail": "Optional requested tenant context for authorized multi-tenant users. Never trusted as tenant authority; server validates it against the authenticated principal."
+    },
+    {
+      "check": "IF_MATCH_DEFINED_STATIC",
+      "status": "PASS",
+      "detail": "{'name': 'If-Match', 'in': 'header', 'required': True, 'schema': {'type': 'string'}, 'description': 'ETag/version for optimistic concurrency, e.g. \"17\".'}"
+    },
+    {
+      "check": "OPENAPI_SEMANTIC_VALIDATOR",
+      "status": "BLOCKED",
+      "detail": "No specialized OpenAPI 3.x semantic/schema validator is installed in this execution environment; static checks are not treated as equivalent."
+    },
+    {
+      "check": "AUTHORITATIVE_COMMIT_BINDING",
+      "status": "BLOCKED",
+      "detail": "Full Git commit SHA unavailable because uploaded repository snapshot contains no .git metadata."
+    }
+  ],
+  "decisionReason": "G01 cannot PASS unless every required check passes, including specialized OpenAPI semantic validation and authoritative commit binding."
+}
