@@ -10,7 +10,7 @@
     "validate:repo": "node scripts/validate-repo.mjs",
     "test:domain": "node --test tests/*.test.mjs",
     "smoke": "node scripts/smoke-contract.mjs",
-    "test:local": "npm run validate:repo && npm run test:domain && npm run smoke",
+    "test:local": "npm run validate:repo && npm run test:domain && npm run test:s0 && npm run smoke",
     "dev:api": "npm --workspace apps/api run start:dev",
     "dev:web": "npm --workspace apps/web run dev",
     "build": "npm --workspace packages/contracts run build && npm --workspace apps/api run build && npm --workspace apps/web run build",
@@ -22,7 +22,9 @@
     "pilot:monitor": "node scripts/pilot-monitor.mjs",
     "release:decision": "node scripts/release-decision.mjs",
     "release:attest": "node scripts/generate-release-attestation.mjs",
-    "governance:implementation-gates": "node scripts/evaluate-implementation-gates.mjs"
+    "governance:implementation-gates": "node scripts/evaluate-implementation-gates.mjs",
+    "test:s0": "node --test tests/v1.1/*.test.mjs",
+    "governance:s0-acceptance": "node scripts/evaluate-s0-acceptance.mjs"
   },
   "engines": {
     "node": ">=22"
