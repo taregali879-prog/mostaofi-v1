@@ -1,0 +1,9 @@
+{
+  "testId": "S1-CT-061",
+  "method": "POST",
+  "path": "/api/v1/maintenance/contracts/{contractId}/activate",
+  "executionAttempt": "NOT_SENT",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "headers": {},
+  "body": null
+}

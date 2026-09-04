@@ -1,0 +1,42 @@
+{
+  "testId": "S1-CT-073",
+  "gateIds": [
+    "G02",
+    "G08"
+  ],
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "startedAtUtc": "2026-09-04T11:21:11.827622Z",
+  "finishedAtUtc": "2026-09-04T11:21:41.991694Z",
+  "durationMs": 0,
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "repository": "local/mostaofi",
+  "branch": "feature/v1.1-s1-evidence-execution",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "workflowSha": "137632120a2fdf4879adb48601123f7b37995926",
+  "environmentId": "caas-local:node22.16.0:no-maintenance-runtime",
+  "runnerIdentity": "node-v22.16.0/python-3.13.5",
+  "requestId": null,
+  "correlationId": null,
+  "traceId": null,
+  "requestArtifact": "request.json",
+  "responseArtifact": "response.json",
+  "logArtifact": "execution.log",
+  "requestArtifactSha256": "a8b1530f4e38b564ea8eaa3817316761537b1607ee8504dadf901a8127ff2ee7",
+  "responseArtifactSha256": "937f1613b8ce4c65c05d9a74f01a3cd371d49fe178123865be5b7d2ab395a5a8",
+  "logArtifactSha256": "52b96cadfd56452325a04b31edff12aa46dcffdd2383092da71ad7117af05d3a",
+  "assertions": [],
+  "observed": {
+    "expected": {
+      "status": 200,
+      "assertion": "Across adjacent pages over an unchanged dataset, contract IDs do not overlap; repeated traversal preserves the same concatenated sequence and pagination meta remains internally consistent."
+    }
+  },
+  "executionAttempt": "NOT_SENT",
+  "review": {
+    "reviewer": null,
+    "reviewedAtUtc": null,
+    "decision": null,
+    "note": null
+  }
+}

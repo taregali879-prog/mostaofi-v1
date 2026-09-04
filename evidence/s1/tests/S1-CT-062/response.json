@@ -1,0 +1,7 @@
+{
+  "testId": "S1-CT-062",
+  "executionAttempt": "NOT_SENT",
+  "statusCode": null,
+  "body": null,
+  "reason": "UPSTREAM_G01_NOT_PASS"
+}

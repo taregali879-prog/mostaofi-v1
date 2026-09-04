@@ -1,0 +1,42 @@
+{
+  "testId": "S1-CT-022",
+  "gateIds": [
+    "G04",
+    "G10"
+  ],
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "startedAtUtc": "2026-09-04T11:21:11.827622Z",
+  "finishedAtUtc": "2026-09-04T11:21:41.975313Z",
+  "durationMs": 0,
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "repository": "local/mostaofi",
+  "branch": "feature/v1.1-s1-evidence-execution",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "workflowSha": "137632120a2fdf4879adb48601123f7b37995926",
+  "environmentId": "caas-local:node22.16.0:no-maintenance-runtime",
+  "runnerIdentity": "node-v22.16.0/python-3.13.5",
+  "requestId": null,
+  "correlationId": null,
+  "traceId": null,
+  "requestArtifact": "request.json",
+  "responseArtifact": "response.json",
+  "logArtifact": "execution.log",
+  "requestArtifactSha256": "932e470c94e843608889e8156ab9ab2e2b2296a0970ad2a77e5455fe8449ee43",
+  "responseArtifactSha256": "e61f9ffeca21a823fc15756a1d5457f8b7831652770b40e3c9501e8e9166eb36",
+  "logArtifactSha256": "98589535714d20843b48454a285089b90e9f57423faf0bf9d86fff2c6bdd0e01",
+  "assertions": [],
+  "observed": {
+    "expected": {
+      "status": 422,
+      "errorCode": "INVALID_SCOPE_COVERAGE"
+    }
+  },
+  "executionAttempt": "NOT_SENT",
+  "review": {
+    "reviewer": null,
+    "reviewedAtUtc": null,
+    "decision": null,
+    "note": null
+  }
+}

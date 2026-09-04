@@ -1,0 +1,16 @@
+{
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "gates": {
+    "G01": "BLOCKED",
+    "G02": "BLOCKED",
+    "G03": "BLOCKED",
+    "G04": "BLOCKED",
+    "G05": "BLOCKED",
+    "G06": "BLOCKED",
+    "G07": "BLOCKED",
+    "G08": "BLOCKED",
+    "G09": "BLOCKED",
+    "G10": "BLOCKED"
+  },
+  "allPass": false
+}

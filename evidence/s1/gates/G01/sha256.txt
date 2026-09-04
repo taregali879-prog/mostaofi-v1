@@ -1,4 +1,2 @@
-f091d7eb3cfe2341db5cc93dc9a21dc30434a610fb06878b79b73736c8d191bb  evidence/s1/gates/G01/gate-result.json
-9a1e0d38a2946c51c87130ef10ef198ff11362df63d8e6185c348ac54b90c649  evidence/s1/gates/G01/schema-validation.log
-d5ab6757814cf6a7793c43644f480e862a1c6be1b7af309ecb4126df9de25aa7  spec/s1/openapi.yaml
-7e7299283e0942677c1e95b609aa077d6f3b3ea79d68161152e37abff18a81db  governance/s1/ci-manifest.yaml
+b719c3dfbd4a9c73c5cea4174c2e372489e1136fdf62a231f85fd99b6c9a3e67  gate-result.json
+19af2e36221b81062ce16f5f9275a8d97f5e993baff964ab0e258a1a02dd623a  test-index.json

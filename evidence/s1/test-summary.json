@@ -1,0 +1,181 @@
+{
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "adoptedTestCount": 34,
+  "canonicalThrough071DefinedTestCount": 31,
+  "r002AddedTestCount": 3,
+  "pass": 0,
+  "fail": 0,
+  "blocked": 34,
+  "tests": [
+    {
+      "testId": "S1-CT-001",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-002",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-003",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-004",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-010",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-011",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-012",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-013",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-020",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-021",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-022",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-023",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-024",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-030",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-031",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-032",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-040",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-041",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-042",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-043",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-044",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-050",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-051",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-052",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-053",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-054",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-060",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-061",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-062",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-070",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-071",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-072",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-073",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    },
+    {
+      "testId": "S1-CT-074",
+      "status": "BLOCKED",
+      "reason": "UPSTREAM_G01_NOT_PASS"
+    }
+  ]
+}

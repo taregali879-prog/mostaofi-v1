@@ -1,0 +1,42 @@
+{
+  "testId": "S1-CT-072",
+  "gateIds": [
+    "G02",
+    "G08"
+  ],
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "startedAtUtc": "2026-09-04T11:21:11.827622Z",
+  "finishedAtUtc": "2026-09-04T11:21:41.990949Z",
+  "durationMs": 0,
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "repository": "local/mostaofi",
+  "branch": "feature/v1.1-s1-evidence-execution",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "workflowSha": "137632120a2fdf4879adb48601123f7b37995926",
+  "environmentId": "caas-local:node22.16.0:no-maintenance-runtime",
+  "runnerIdentity": "node-v22.16.0/python-3.13.5",
+  "requestId": null,
+  "correlationId": null,
+  "traceId": null,
+  "requestArtifact": "request.json",
+  "responseArtifact": "response.json",
+  "logArtifact": "execution.log",
+  "requestArtifactSha256": "8b10cd8f78d7cc6da3525fa307bd441295eeb23b32b5faad0157d48fddc0d5b8",
+  "responseArtifactSha256": "da0c066855397499845885e15f01eb495a8d94f2b4cda3127cd073800409e922",
+  "logArtifactSha256": "42b6a2512b2dd31106d7d6ed92af54ff6d12662448bc1688f229bedeaa8f51a8",
+  "assertions": [],
+  "observed": {
+    "expected": {
+      "status": 200,
+      "assertion": "With an unchanged dataset and identical page/pageSize/status query, repeated responses preserve the same ordered contract-id sequence and identical pagination meta."
+    }
+  },
+  "executionAttempt": "NOT_SENT",
+  "review": {
+    "reviewer": null,
+    "reviewedAtUtc": null,
+    "decision": null,
+    "note": null
+  }
+}

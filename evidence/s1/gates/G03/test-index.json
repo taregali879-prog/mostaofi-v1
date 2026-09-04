@@ -1,0 +1,53 @@
+{
+  "gateId": "G03",
+  "tests": [
+    {
+      "testId": "S1-CT-013",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-041",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-042",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-043",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-044",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-050",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-051",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-052",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-053",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-054",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-061",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-062",
+      "status": "BLOCKED"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "gateId": "G05",
+  "tests": [
+    {
+      "testId": "S1-CT-060",
+      "status": "BLOCKED"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "gateId": "G08",
+  "name": "Pagination Determinism",
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "coverageStatus": "COVERED",
+  "mappedTests": [
+    "S1-CT-072",
+    "S1-CT-073",
+    "S1-CT-074"
+  ],
+  "testResults": [
+    {
+      "testId": "S1-CT-072",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-073",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-074",
+      "status": "BLOCKED"
+    }
+  ],
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "decidedAtUtc": "2026-09-04T11:21:41.995565Z"
+}

@@ -1,0 +1,17 @@
+{
+  "gateId": "G08",
+  "tests": [
+    {
+      "testId": "S1-CT-072",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-073",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-074",
+      "status": "BLOCKED"
+    }
+  ]
+}

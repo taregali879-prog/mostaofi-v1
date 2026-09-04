@@ -1,0 +1,39 @@
+{
+  "gateId": "G10",
+  "name": "Scope Coverage Contract Validation",
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "coverageStatus": "COVERED",
+  "mappedTests": [
+    "S1-CT-020",
+    "S1-CT-021",
+    "S1-CT-022",
+    "S1-CT-023",
+    "S1-CT-024"
+  ],
+  "testResults": [
+    {
+      "testId": "S1-CT-020",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-021",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-022",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-023",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-024",
+      "status": "BLOCKED"
+    }
+  ],
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "decidedAtUtc": "2026-09-04T11:21:41.996337Z"
+}

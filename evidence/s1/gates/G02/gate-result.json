@@ -1,0 +1,74 @@
+{
+  "gateId": "G02",
+  "name": "Request/Response Conformance",
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "coverageStatus": "COVERED",
+  "mappedTests": [
+    "S1-CT-001",
+    "S1-CT-002",
+    "S1-CT-003",
+    "S1-CT-010",
+    "S1-CT-011",
+    "S1-CT-020",
+    "S1-CT-030",
+    "S1-CT-040",
+    "S1-CT-041",
+    "S1-CT-043",
+    "S1-CT-070",
+    "S1-CT-071"
+  ],
+  "testResults": [
+    {
+      "testId": "S1-CT-001",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-002",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-003",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-010",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-011",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-020",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-030",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-040",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-041",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-043",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-070",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-071",
+      "status": "BLOCKED"
+    }
+  ],
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "decidedAtUtc": "2026-09-04T11:21:41.993116Z"
+}

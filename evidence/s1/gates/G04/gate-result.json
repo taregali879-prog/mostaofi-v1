@@ -1,0 +1,94 @@
+{
+  "gateId": "G04",
+  "name": "Canonical Error Registry",
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "coverageStatus": "COVERED",
+  "mappedTests": [
+    "S1-CT-002",
+    "S1-CT-003",
+    "S1-CT-004",
+    "S1-CT-011",
+    "S1-CT-012",
+    "S1-CT-021",
+    "S1-CT-022",
+    "S1-CT-023",
+    "S1-CT-024",
+    "S1-CT-032",
+    "S1-CT-040",
+    "S1-CT-042",
+    "S1-CT-054",
+    "S1-CT-060",
+    "S1-CT-062",
+    "S1-CT-071"
+  ],
+  "testResults": [
+    {
+      "testId": "S1-CT-002",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-003",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-004",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-011",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-012",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-021",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-022",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-023",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-024",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-032",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-040",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-042",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-054",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-060",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-062",
+      "status": "BLOCKED"
+    },
+    {
+      "testId": "S1-CT-071",
+      "status": "BLOCKED"
+    }
+  ],
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "decidedAtUtc": "2026-09-04T11:21:41.993809Z"
+}

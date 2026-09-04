@@ -1,0 +1,28 @@
+{
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "decisionFormula": "S1_PASS = G01_PASS \u2227 G02_PASS \u2227 G03_PASS \u2227 G04_PASS \u2227 G05_PASS \u2227 G06_PASS \u2227 G07_PASS \u2227 G08_PASS \u2227 G09_PASS \u2227 G10_PASS",
+  "S1_PASS": false,
+  "S2_UNLOCKED": false,
+  "status": "BLOCKED",
+  "gates": {
+    "G01": "BLOCKED",
+    "G02": "BLOCKED",
+    "G03": "BLOCKED",
+    "G04": "BLOCKED",
+    "G05": "BLOCKED",
+    "G06": "BLOCKED",
+    "G07": "BLOCKED",
+    "G08": "BLOCKED",
+    "G09": "BLOCKED",
+    "G10": "BLOCKED"
+  },
+  "testedCommitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "authorizedCommitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "testedCommitEqualsAuthorizedCommit": true,
+  "specSha256": "d5ab6757814cf6a7793c43644f480e862a1c6be1b7af309ecb4126df9de25aa7",
+  "erdSha256": "cd57b2b76fee1b962e0a16991414181ea4743004b3065de2ef0376b0f93d6f31",
+  "manifestSha256": "31a632b3f067cc948592e3400a39003ce3b87a7d993e7f69d73c38de741fe3a0",
+  "reason": "ONE_OR_MORE_REQUIRED_GATES_NON_PASS",
+  "decidedAtUtc": "2026-09-04T11:21:41.996820Z",
+  "evidenceIntegrity": "VERIFIED"
+}

@@ -1,0 +1,9 @@
+{
+  "testId": "S1-CT-071",
+  "method": "GET",
+  "path": "/api/v1/maintenance/contracts/{contractId}/360",
+  "executionAttempt": "NOT_SENT",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "headers": {},
+  "body": null
+}

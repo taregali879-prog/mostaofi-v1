@@ -1,0 +1,19 @@
+{
+  "gateId": "G05",
+  "name": "ETag / If-Match Concurrency",
+  "status": "BLOCKED",
+  "reason": "UPSTREAM_G01_NOT_PASS",
+  "coverageStatus": "COVERED",
+  "mappedTests": [
+    "S1-CT-060"
+  ],
+  "testResults": [
+    {
+      "testId": "S1-CT-060",
+      "status": "BLOCKED"
+    }
+  ],
+  "runId": "MOSTAOFI-S1-EXEC-20260904-002",
+  "commitSha": "75093ae45e353c1bab351db445d31392ecfeb999",
+  "decidedAtUtc": "2026-09-04T11:21:41.994326Z"
+}
