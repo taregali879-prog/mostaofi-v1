@@ -49,7 +49,7 @@ test('S1 evidence governance artifacts define runbook, directory structure, temp
 test('S1 evidence runner fail-closes all adopted CTs when G01 strict validation is blocked', () => {
   const out = mkdtempSync(join(tmpdir(), 'mostaofi-s1-evidence-'));
   const runner = spawnSync('python3', ['scripts/run-s1-evidence.py', '--output', out, '--mode', 'dry-run-blocked'], {
-    cwd: new URL('../..', import.meta.url), encoding: 'utf8', env: { ...process.env, S1_AUTHORIZED_COMMIT_SHA: 'e99854862d9b874da9258e8496dbd544e5312605' }
+    cwd: new URL('../..', import.meta.url), encoding: 'utf8', env: { ...process.env }
   });
   assert.equal(runner.status, 2, runner.stderr || runner.stdout);
   const decision = JSON.parse(readFileSync(join(out, 's1-gate-decision.json'), 'utf8'));
@@ -62,4 +62,12 @@ test('S1 evidence runner fail-closes all adopted CTs when G01 strict validation 
   assert.equal(summary.pass, 0);
   assert.equal(summary.blocked, 34);
   rmSync(out, { recursive: true, force: true });
+});
+
+test('S1 runner captures clean-tree preflight before mutating the evidence output directory', () => {
+  const source = text('scripts/run-s1-evidence.py');
+  const statusPos = source.indexOf("git('status','--porcelain')");
+  const removePos = source.indexOf('shutil.rmtree(out)');
+  assert.ok(statusPos >= 0 && removePos >= 0, 'expected status and output cleanup operations');
+  assert.ok(statusPos < removePos, 'git status must be captured before evidence output is deleted or rewritten');
 });

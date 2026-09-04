@@ -82,10 +82,11 @@ def main():
     args=ap.parse_args()
     out=pathlib.Path(args.output)
     if not out.is_absolute(): out=ROOT/out
+    started=now(); run_id=os.getenv('S1_RUN_ID') or 'MOSTAOFI-S1-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    # Capture source identity before evidence output is mutated. This is the clean-tree preflight evidence.
+    rc, head, _=git('rev-parse','HEAD'); rc2, branch, _=git('branch','--show-current'); rc3, status, _=git('status','--porcelain')
     if out.exists(): shutil.rmtree(out)
     out.mkdir(parents=True)
-    started=now(); run_id=os.getenv('S1_RUN_ID') or 'MOSTAOFI-S1-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    rc, head, _=git('rev-parse','HEAD'); rc2, branch, _=git('branch','--show-current'); rc3, status, _=git('status','--porcelain')
     authorized=os.getenv('S1_AUTHORIZED_COMMIT_SHA') or head
     workflow_sha=git('hash-object','scripts/run-s1-evidence.py')[1]
     manifest=yaml.safe_load(MANIFEST.read_text())
