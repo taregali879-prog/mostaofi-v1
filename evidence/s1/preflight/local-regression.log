@@ -1,0 +1,302 @@
+
+> muqawil-partner-platform@0.5.0-rc3 test:local
+> npm run validate:repo && npm run test:domain && npm run test:s0 && npm run smoke
+
+
+> muqawil-partner-platform@0.5.0-rc3 validate:repo
+> node scripts/validate-repo.mjs
+
+OK apps/api/src/main.ts
+OK apps/api/src/app.module.ts
+OK apps/web/app/page.tsx
+OK packages/contracts/src/index.ts
+OK database/schema.prisma
+OK database/migrations/0001_initial/migration.sql
+OK database/seed.sql
+OK .github/workflows/ci.yml
+OK .env.example
+OK docker-compose.yml
+Repository baseline validation passed.
+
+> muqawil-partner-platform@0.5.0-rc3 test:domain
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: BOQ schema has immutable versions and items
+ok 1 - BOQ schema has immutable versions and items
+  ---
+  duration_ms: 0.624051
+  type: 'test'
+  ...
+# Subtest: BOQ lifecycle enforces draft submit approval
+ok 2 - BOQ lifecycle enforces draft submit approval
+  ---
+  duration_ms: 0.205479
+  type: 'test'
+  ...
+# Subtest: contractor draft may be submitted
+ok 3 - contractor draft may be submitted
+  ---
+  duration_ms: 0.926668
+  type: 'test'
+  ...
+# Subtest: contractor draft cannot jump to approved
+ok 4 - contractor draft cannot jump to approved
+  ---
+  duration_ms: 0.144468
+  type: 'test'
+  ...
+# Subtest: tenant isolation allows same organization
+ok 5 - tenant isolation allows same organization
+  ---
+  duration_ms: 0.199882
+  type: 'test'
+  ...
+# Subtest: tenant isolation rejects different organization
+ok 6 - tenant isolation rejects different organization
+  ---
+  duration_ms: 0.21227
+  type: 'test'
+  ...
+# Subtest: governance protocol explicitly separates implementation start from acceptance/final freeze
+ok 7 - governance protocol explicitly separates implementation start from acceptance/final freeze
+  ---
+  duration_ms: 0.930714
+  type: 'test'
+  ...
+# Subtest: manifest defines separate implementation-start and acceptance policies
+ok 8 - manifest defines separate implementation-start and acceptance policies
+  ---
+  duration_ms: 0.154553
+  type: 'test'
+  ...
+# Subtest: legacy unlock rule no longer conflates implementation start with S1 acceptance
+ok 9 - legacy unlock rule no longer conflates implementation start with S1 acceptance
+  ---
+  duration_ms: 0.187773
+  type: 'test'
+  ...
+# Subtest: implementation can start with runtime contract gates still blocked
+ok 10 - implementation can start with runtime contract gates still blocked
+  ---
+  duration_ms: 29.85643
+  type: 'test'
+  ...
+# Subtest: baseline drift fail-closes implementation start
+ok 11 - baseline drift fail-closes implementation start
+  ---
+  duration_ms: 32.584299
+  type: 'test'
+  ...
+# Subtest: full pass-evidenced gates unlock acceptance and final freeze
+ok 12 - full pass-evidenced gates unlock acceptance and final freeze
+  ---
+  duration_ms: 29.920556
+  type: 'test'
+  ...
+# Subtest: unapproved BOQ is blocked
+ok 13 - unapproved BOQ is blocked
+  ---
+  duration_ms: 0.858325
+  type: 'test'
+  ...
+# Subtest: accepted quantity drives project material truth
+ok 14 - accepted quantity drives project material truth
+  ---
+  duration_ms: 0.612193
+  type: 'test'
+  ...
+# Subtest: S4 blocks procurement before BOQ approval
+ok 15 - S4 blocks procurement before BOQ approval
+  ---
+  duration_ms: 0.920939
+  type: 'test'
+  ...
+# Subtest: S6 blocks over-inspection
+ok 16 - S6 blocks over-inspection
+  ---
+  duration_ms: 0.184328
+  type: 'test'
+  ...
+# Subtest: S8 KPI agrees with accepted inventory truth
+ok 17 - S8 KPI agrees with accepted inventory truth
+  ---
+  duration_ms: 0.980759
+  type: 'test'
+  ...
+# Subtest: pilot monitor fails when availability is below threshold
+ok 18 - pilot monitor fails when availability is below threshold
+  ---
+  duration_ms: 0.770522
+  type: 'test'
+  ...
+# Subtest: pilot monitor passes healthy samples
+ok 19 - pilot monitor passes healthy samples
+  ---
+  duration_ms: 0.123607
+  type: 'test'
+  ...
+# Subtest: all mandatory gates PASS plus human GO yields RELEASE GO
+ok 20 - all mandatory gates PASS plus human GO yields RELEASE GO
+  ---
+  duration_ms: 1.043815
+  type: 'test'
+  ...
+# Subtest: a failed mandatory gate forces NO-GO even with human GO
+ok 21 - a failed mandatory gate forces NO-GO even with human GO
+  ---
+  duration_ms: 0.274013
+  type: 'test'
+  ...
+# Subtest: a missing gate forces NO-GO
+ok 22 - a missing gate forces NO-GO
+  ---
+  duration_ms: 0.122856
+  type: 'test'
+  ...
+# Subtest: human NO-GO cannot become RELEASE GO when automation passes
+ok 23 - human NO-GO cannot become RELEASE GO when automation passes
+  ---
+  duration_ms: 0.266652
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 157.936612
+
+> muqawil-partner-platform@0.5.0-rc3 test:s0
+> node --test tests/v1.1/*.test.mjs
+
+TAP version 13
+# Subtest: S0 acceptance is PASS only when every required executable check is pass-evidenced and commit-bound
+ok 1 - S0 acceptance is PASS only when every required executable check is pass-evidenced and commit-bound
+  ---
+  duration_ms: 31.741333
+  type: 'test'
+  ...
+# Subtest: S0 acceptance fail-closes on BLOCKED evidence
+ok 2 - S0 acceptance fail-closes on BLOCKED evidence
+  ---
+  duration_ms: 33.647858
+  type: 'test'
+  ...
+# Subtest: S0 acceptance fail-closes on commit mismatch
+ok 3 - S0 acceptance fail-closes on commit mismatch
+  ---
+  duration_ms: 28.293988
+  type: 'test'
+  ...
+# Subtest: S0 binds the exact frozen ERD and OpenAPI candidate digests
+ok 4 - S0 binds the exact frozen ERD and OpenAPI candidate digests
+  ---
+  duration_ms: 1.719744
+  type: 'test'
+  ...
+# Subtest: S0 migration exists
+ok 5 - S0 migration exists
+  ---
+  duration_ms: 0.156997
+  type: 'test'
+  ...
+# Subtest: S0 establishes fail-closed tenant and actor context functions
+ok 6 - S0 establishes fail-closed tenant and actor context functions
+  ---
+  duration_ms: 0.434455
+  type: 'test'
+  ...
+# Subtest: S0 creates the Core organization-to-tenant compatibility bridge without duplicating Core data
+ok 7 - S0 creates the Core organization-to-tenant compatibility bridge without duplicating Core data
+  ---
+  duration_ms: 0.280353
+  type: 'test'
+  ...
+# Subtest: S0 idempotency store enforces canonical uniqueness and request SHA-256
+ok 8 - S0 idempotency store enforces canonical uniqueness and request SHA-256
+  ---
+  duration_ms: 0.367765
+  type: 'test'
+  ...
+# Subtest: S0 creates transactional outbox infrastructure with correlation and causation
+ok 9 - S0 creates transactional outbox infrastructure with correlation and causation
+  ---
+  duration_ms: 0.256327
+  type: 'test'
+  ...
+# Subtest: S0 forces RLS on tenant-owned infrastructure tables with fail-closed policies
+ok 10 - S0 forces RLS on tenant-owned infrastructure tables with fail-closed policies
+  ---
+  duration_ms: 0.406142
+  type: 'test'
+  ...
+# Subtest: S0 enforces audit append-only and domain-event business-content immutability at DB level
+ok 11 - S0 enforces audit append-only and domain-event business-content immutability at DB level
+  ---
+  duration_ms: 0.247854
+  type: 'test'
+  ...
+# Subtest: S0 acceptance governance artifacts bind the accepted run and all three delivered bundle SHA-256 values
+ok 12 - S0 acceptance governance artifacts bind the accepted run and all three delivered bundle SHA-256 values
+  ---
+  duration_ms: 1.668547
+  type: 'test'
+  ...
+# Subtest: S1 corrected manifest keeps Registry R002 semantics and binds accepted S0
+ok 13 - S1 corrected manifest keeps Registry R002 semantics and binds accepted S0
+  ---
+  duration_ms: 0.536289
+  type: 'test'
+  ...
+# Subtest: S1 evidence governance artifacts define runbook, directory structure, template, and final matrix
+ok 14 - S1 evidence governance artifacts define runbook, directory structure, template, and final matrix
+  ---
+  duration_ms: 0.176577
+  type: 'test'
+  ...
+# Subtest: S1 evidence runner fail-closes all adopted CTs when G01 strict validation is blocked
+ok 15 - S1 evidence runner fail-closes all adopted CTs when G01 strict validation is blocked
+  ---
+  duration_ms: 764.088638
+  type: 'test'
+  ...
+# Subtest: S1 runner captures clean-tree preflight before mutating the evidence output directory
+ok 16 - S1 runner captures clean-tree preflight before mutating the evidence output directory
+  ---
+  duration_ms: 0.220382
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 830.929329
+
+> muqawil-partner-platform@0.5.0-rc3 smoke
+> node scripts/smoke-contract.mjs
+
+OK @Post('login')
+OK @Get('/me')
+OK @Post('projects/:projectId/material-requirements')
+OK @Post('material-requirements/:id/rfqs')
+OK @Post('rfqs/:id/quotes')
+OK @Get('rfqs/:id/comparison')
+OK @Post('rfqs/:id/award')
+OK @Post('rfqs/:id/purchase-orders')
+OK @Post('purchase-orders/:id/approve')
+OK @Post('purchase-orders/:poId/deliveries')
+OK @Post('deliveries/:id/inspect')
+OK @Post('deliveries/:id/receive')
+OK @Post('projects/:projectId/materials/allocate')
+OK @Post('projects/:projectId/materials/issue')
+OK @Post('projects/:projectId/materials/return')
+OK @Get('projects/:projectId/materials/kpis')
+MVP S4-S8 contract smoke passed.

@@ -1,0 +1,2 @@
+$ npx --yes @redocly/cli@1.34.5 lint /mnt/data/mostaofi_s1_repo/spec/s1/openapi.yaml --extends recommended-strict
+TIMEOUT after 30 seconds
