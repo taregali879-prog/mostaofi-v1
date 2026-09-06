@@ -8,3 +8,5 @@ coverage
 uploads
 .DS_Store
 *.log
+
+.local-launch/

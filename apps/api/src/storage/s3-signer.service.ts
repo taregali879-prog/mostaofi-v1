@@ -18,11 +18,11 @@ export class S3SignerService {
     const path = `/${bucket}/${key.split('/').map(encodeURIComponent).join('/')}`;
     const params = new URLSearchParams({
       'X-Amz-Algorithm':'AWS4-HMAC-SHA256','X-Amz-Credential':`${access}/${scope}`,'X-Amz-Date':amz,
-      'X-Amz-Expires':String(expiresSeconds),'X-Amz-SignedHeaders':'host;content-type'
+      'X-Amz-Expires':String(expiresSeconds),'X-Amz-SignedHeaders':'content-type;host'
     });
     params.sort();
     const canonicalHeaders = `content-type:${contentType}\nhost:${endpoint.host}\n`;
-    const canonical = `PUT\n${path}\n${params.toString()}\n${canonicalHeaders}\nhost;content-type\nUNSIGNED-PAYLOAD`;
+    const canonical = `PUT\n${path}\n${params.toString()}\n${canonicalHeaders}\ncontent-type;host\nUNSIGNED-PAYLOAD`;
     const stringToSign = `AWS4-HMAC-SHA256\n${amz}\n${scope}\n${hex(canonical)}`;
     const kDate=h(`AWS4${secret}`,date), kRegion=h(kDate,region), kService=h(kRegion,'s3'), kSigning=h(kService,'aws4_request');
     const signature=createHmac('sha256',kSigning).update(stringToSign).digest('hex');

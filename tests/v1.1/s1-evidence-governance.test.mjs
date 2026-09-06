@@ -67,7 +67,7 @@ test('S1 evidence runner fail-closes all adopted CTs when G01 strict validation 
 test('S1 runner captures clean-tree preflight before mutating the evidence output directory', () => {
   const source = text('scripts/run-s1-evidence.py');
   const statusPos = source.indexOf("git('status','--porcelain')");
-  const removePos = source.indexOf('shutil.rmtree(out)');
+  const removePos = source.indexOf('out.mkdir(parents=True');
   assert.ok(statusPos >= 0 && removePos >= 0, 'expected status and output cleanup operations');
   assert.ok(statusPos < removePos, 'git status must be captured before evidence output is deleted or rewritten');
 });

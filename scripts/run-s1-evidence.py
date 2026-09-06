@@ -69,7 +69,7 @@ def strict_validator(mode, out):
             infra = any(s in (r.stderr+r.stdout) for s in ['EAI_AGAIN','ENETUNREACH','registry.npmjs.org','could not determine executable','not found'])
             return {'status':'BLOCKED' if infra else 'FAIL','reason':'STRICT_VALIDATOR_INFRASTRUCTURE_BLOCKED' if infra else 'STRICT_VALIDATOR_REPORTED_ERRORS','command':cmd,'exitCode':r.returncode,'logSha256':sha_file(log)}
         except subprocess.TimeoutExpired as e:
-            log.write_text('$ '+' '.join(cmd)+'\nTIMEOUT after 30 seconds\n'+(e.stdout or '')+(e.stderr or ''))
+            log.write_text('$ '+' '.join(cmd)+'\nTIMEOUT after 30 seconds\n'+str(e.stdout or '')+str(e.stderr or ''))
             return {'status':'BLOCKED','reason':'STRICT_VALIDATOR_TIMEOUT_OR_NETWORK_BLOCKED','command':cmd,'exitCode':None,'logSha256':sha_file(log)}
         except FileNotFoundError as e:
             log.write_text(str(e)+'\n')
@@ -85,13 +85,14 @@ def main():
     started=now(); run_id=os.getenv('S1_RUN_ID') or 'MOSTAOFI-S1-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     # Capture source identity before evidence output is mutated. This is the clean-tree preflight evidence.
     rc, head, _=git('rev-parse','HEAD'); rc2, branch, _=git('branch','--show-current'); rc3, status, _=git('status','--porcelain')
-    if out.exists(): shutil.rmtree(out)
-    out.mkdir(parents=True)
+    # Never delete historical evidence or arbitrary output directories.
+    if out.exists() and any(out.iterdir()): raise ValueError('Output directory must be empty')
+    out.mkdir(parents=True, exist_ok=True)
     authorized=os.getenv('S1_AUTHORIZED_COMMIT_SHA') or head
     workflow_sha=git('hash-object','scripts/run-s1-evidence.py')[1]
     manifest=yaml.safe_load(MANIFEST.read_text())
     tests=manifest['tests']; gates=manifest['governanceGates']
-    run_identity={'runId':run_id,'repository':'local/mostaofi','branch':branch,'commitSha':head,'authorizedCommitSha':authorized,'workflowSha':workflow_sha,'environmentId':os.getenv('S1_ENVIRONMENT_ID','caas-local-no-s1-runtime'),'runnerIdentity':f"node-v22.16.0/python-{sys.version.split()[0]}",'startedAtUtc':started,'sourceTreeCleanAtStart':status==''}
+    run_identity={'runId':run_id,'repository':os.getenv('GITHUB_REPOSITORY','local/mostaofi'),'branch':branch,'commitSha':head,'authorizedCommitSha':authorized,'workflowSha':os.getenv('GITHUB_WORKFLOW_SHA',workflow_sha),'runnerScriptSha256':sha_file(pathlib.Path(__file__)),'environmentId':os.getenv('S1_ENVIRONMENT_ID','caas-local-no-s1-runtime'),'runnerIdentity':f"{os.getenv('RUNNER_NAME','local')}/python-{sys.version.split()[0]}",'startedAtUtc':started,'sourceTreeCleanAtStart':status==''}
     write_json(out/'run-identity.json',run_identity)
     static=static_openapi_checks()
     strict=strict_validator(args.mode,out)

@@ -24,9 +24,13 @@
     "release:attest": "node scripts/generate-release-attestation.mjs",
     "governance:implementation-gates": "node scripts/evaluate-implementation-gates.mjs",
     "test:s0": "node --test tests/v1.1/*.test.mjs",
-    "governance:s0-acceptance": "node scripts/evaluate-s0-acceptance.mjs"
+    "governance:s0-acceptance": "node scripts/evaluate-s0-acceptance.mjs",
+    "launch:local": "node scripts/start-local.mjs"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@redocly/cli": "1.34.5"
   }
 }

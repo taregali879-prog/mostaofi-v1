@@ -1,0 +1,161 @@
+name: Mostaofi v1.1 evidence and review
+run-name: Mostaofi v1.1 verification ${{ inputs.rc_sha }}
+on:
+  workflow_dispatch:
+    inputs:
+      rc_sha:
+        description: Full reviewed candidate SHA; must equal the dispatched ref and workflow SHA
+        required: true
+        type: string
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+permissions:
+  contents: read
+concurrency:
+  group: mostaofi-v11-${{ inputs.rc_sha }}
+  cancel-in-progress: false
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      packaged: ${{ steps.package.outputs.packaged }}
+      automated: ${{ steps.verify.outputs.automated }}
+    env:
+      RC_SHA: ${{ inputs.rc_sha }}
+      S1_AUTHORIZED_COMMIT_SHA: ${{ inputs.rc_sha }}
+      S1_RUN_ID: github-${{ github.run_id }}-${{ github.run_attempt }}
+      S1_ENVIRONMENT_ID: github-hosted-s1-verification
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.rc_sha }}
+          persist-credentials: false
+      - name: Bind source and workflow to reviewed SHA
+        shell: bash
+        run: |
+          [[ "$RC_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$RC_SHA"
+          test "$GITHUB_SHA" = "$RC_SHA"
+          test "$GITHUB_WORKFLOW_SHA" = "$RC_SHA"
+          test -z "$(git status --porcelain)"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install locked tools
+        run: |
+          npm ci --no-audit --fund=false
+          python -m pip install PyYAML==6.0.3
+          echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Validate evidence verifier and existing regression suite
+        run: |
+          python -m unittest discover -s tests -p 'test_s1_integrity.py'
+          npm run test:local
+          test -z "$(git status --porcelain)"
+      - name: Evaluate G01 through G10 using adopted registry
+        id: gates
+        continue-on-error: true
+        run: python scripts/run-s1-evidence.py --output "$RUNNER_TEMP/s1-evidence" --mode execute
+      - name: Independently verify integrity and all required results
+        id: verify
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          set +e
+          python scripts/verify-s1-evidence.py "$RUNNER_TEMP/s1-evidence" "$RC_SHA" > "$RUNNER_TEMP/package/verified-decision.json"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then echo 'automated=PASS' >> "$GITHUB_OUTPUT"; else echo 'automated=NO-GO' >> "$GITHUB_OUTPUT"; fi
+          cat "$RUNNER_TEMP/package/verified-decision.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Package source and immutable evidence
+        id: package
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' }}
+        run: |
+          test -z "$(git status --porcelain)"
+          git archive --format=tar "$RC_SHA" > "$RUNNER_TEMP/package/source.tar"
+          tar -cf "$RUNNER_TEMP/package/evidence.tar" -C "$RUNNER_TEMP" s1-evidence
+          cd "$RUNNER_TEMP/package"
+          sha256sum source.tar evidence.tar verified-decision.json > SHA256SUMS
+          echo 'packaged=true' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: v11-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/package/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce automated NO-GO
+        if: ${{ steps.verify.outputs.automated != 'PASS' }}
+        run: exit 42
+  attestation:
+    needs: evidence
+    if: ${{ !cancelled() && needs.evidence.outputs.packaged == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: v11-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: package
+      - run: cd package && sha256sum --check SHA256SUMS
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: package/*
+      - name: Verify provenance from the same workflow and source SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RC_SHA: ${{ inputs.rc_sha }}
+        run: |
+          for file in source.tar evidence.tar verified-decision.json SHA256SUMS; do
+            gh attestation verify "package/$file" --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/mostaofi-v11-evidence.yml" --source-digest "$RC_SHA"
+          done
+  review-preflight:
+    needs: [evidence, attestation]
+    if: ${{ needs.evidence.outputs.automated == 'PASS' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Require an existing protected review environment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/environments/mostaofi-v11-review" > environment.json
+          jq -e '.can_admins_bypass == false and any(.protection_rules[]; .type == "required_reviewers" and .prevent_self_review == true and (.reviewers | length > 0))' environment.json
+  human-review:
+    needs: [evidence, attestation, review-preflight]
+    if: ${{ needs.evidence.outputs.automated == 'PASS' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: mostaofi-v11-review
+      url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    permissions:
+      contents: read
+      actions: read
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: v11-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: package
+      - name: Reverify approved artifact before recording S1 acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RC_SHA: ${{ inputs.rc_sha }}
+        run: |
+          cd package
+          sha256sum --check SHA256SUMS
+          gh attestation verify verified-decision.json --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/mostaofi-v11-evidence.yml" --source-digest "$RC_SHA"
+          jq -e --arg sha "$RC_SHA" '.automatedDecision == "PASS" and .expectedCommitSha == $sha and .evidenceIntegrity == "VERIFIED"' verified-decision.json
+          printf 'S1 evidence accepted after protected human review. SHA: %s\nNo deployment or release tag is created; full v1.1 release authorization remains separate.\n' "$RC_SHA" >> "$GITHUB_STEP_SUMMARY"

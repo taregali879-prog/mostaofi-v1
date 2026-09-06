@@ -46,3 +46,24 @@ Implements the S4–S8 MVP backend baseline (Procurement, PO, Delivery, Inventor
 
 ## v0.5.0-rc2 — Test Ready / release hardening
 This release candidate adds a one-time lockfile bootstrap workflow, fail-closed runner preflight, reproducible CI/release gates, SQL reconciliation, pilot health monitoring, release evidence packaging, security/access checklist and rollback controls. Do not create `v1.0.0-mvp` outside the green `Release MVP` workflow.
+
+
+## تشغيل محلي متحقق — 2026-09-06
+
+من Ubuntu تحت المستخدم `mostaofi`:
+
+```bash
+cd /home/mostaofi/mostaofi
+npm run launch:local
+```
+
+يقرأ الأمر `.env` دون طباعته، ويشغّل خدمات Docker، ويولّد Prisma Client،
+ويطبّق الترحيلات ثم يبني API وWeb ويشغّلهما في الخلفية على loopback.
+يتوقف إذا كان المنفذ 3000 أو 4000 مستخدمًا حتى لا ينشئ نسخة مكررة.
+تحتاج قاعدة جديدة إلى تنفيذ seed.sql وتهيئة bucket؛ تم تنفيذهما على هذا الجهاز.
+
+الواجهة: http://localhost:3000/login
+فحص الجاهزية: http://localhost:4000/api/v1/health/ready
+السجلات: `.local-launch/logs/` ومعرّفات العمليات: `.local-launch/processes.json`.
+التشغيل يستمر بعد إغلاق الطرفية، ويتوقف عند إيقاف WSL أو الجهاز؛ أعد الأمر للتشغيل.
+هذا تشغيل محلي للتحقق، ولا يمنح اعتماد الإصدار الرسمي أو توقيع CI.

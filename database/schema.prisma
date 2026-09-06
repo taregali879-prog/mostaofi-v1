@@ -15,6 +15,7 @@ enum ContractorStatus {
   APPROVED
   SUSPENDED
   REJECTED
+  @@map("contractor_status")
 }
 
 enum ProjectStatus {
@@ -23,6 +24,7 @@ enum ProjectStatus {
   ON_HOLD
   COMPLETED
   CANCELLED
+  @@map("project_status")
 }
 
 enum DocumentStatus {
@@ -30,6 +32,7 @@ enum DocumentStatus {
   UPLOADED
   APPROVED
   REJECTED
+  @@map("document_status")
 }
 
 enum BoqStatus {
@@ -38,12 +41,13 @@ enum BoqStatus {
   APPROVED
   REJECTED
   SUPERSEDED
+  @@map("boq_status")
 }
 
 model User {
   id           String       @id @db.Uuid
   email        String       @unique
-  displayName  String
+  displayName  String       @map("display_name")
   passwordHash String       @map("password_hash")
   createdAt    DateTime     @default(now()) @map("created_at")
   memberships  Membership[]
@@ -231,12 +235,57 @@ model BoqItem {
   @@map("boq_items")
 }
 
-enum ProcurementStatus { DRAFT SUBMITTED APPROVED REJECTED CLOSED }
-enum RfqStatus { DRAFT ISSUED CLOSED AWARDED CANCELLED }
-enum SupplierQuoteStatus { DRAFT SUBMITTED SELECTED REJECTED }
-enum PurchaseOrderStatus { DRAFT APPROVED PARTIALLY_DELIVERED FULLY_DELIVERED CLOSED CANCELLED }
-enum DeliveryStatus { EXPECTED ARRIVED UNDER_INSPECTION PARTIALLY_ACCEPTED ACCEPTED REJECTED }
-enum InventoryMovementType { PURCHASE_RECEIPT PROJECT_ALLOCATION PROJECT_ISSUE PROJECT_RETURN SUPPLIER_RETURN WAREHOUSE_TRANSFER ADJUSTMENT }
+enum ProcurementStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CLOSED
+  @@map("procurement_status")
+}
+enum RfqStatus {
+  DRAFT
+  ISSUED
+  CLOSED
+  AWARDED
+  CANCELLED
+  @@map("rfq_status")
+}
+enum SupplierQuoteStatus {
+  DRAFT
+  SUBMITTED
+  SELECTED
+  REJECTED
+  @@map("supplier_quote_status")
+}
+enum PurchaseOrderStatus {
+  DRAFT
+  APPROVED
+  PARTIALLY_DELIVERED
+  FULLY_DELIVERED
+  CLOSED
+  CANCELLED
+  @@map("purchase_order_status")
+}
+enum DeliveryStatus {
+  EXPECTED
+  ARRIVED
+  UNDER_INSPECTION
+  PARTIALLY_ACCEPTED
+  ACCEPTED
+  REJECTED
+  @@map("delivery_status")
+}
+enum InventoryMovementType {
+  PURCHASE_RECEIPT
+  PROJECT_ALLOCATION
+  PROJECT_ISSUE
+  PROJECT_RETURN
+  SUPPLIER_RETURN
+  WAREHOUSE_TRANSFER
+  ADJUSTMENT
+  @@map("inventory_movement_type")
+}
 
 model Supplier {
   id String @id @db.Uuid
