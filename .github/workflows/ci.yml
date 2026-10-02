@@ -48,6 +48,14 @@ jobs:
         run: command -v psql >/dev/null || { sudo apt-get update && sudo apt-get install -y postgresql-client; }
       - name: Runner preflight
         run: ./scripts/runner-preflight.sh
+      - name: Start S3-compatible object storage
+        run: |
+          docker run -d --name s3-ci -p 9000:8333 -e AWS_ACCESS_KEY_ID="$S3_ACCESS_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET_KEY" -e S3_BUCKET="$S3_BUCKET" chrislusf/seaweedfs:4.48
+          for i in {1..45}; do
+            if curl -sS --connect-timeout 1 -o /dev/null "$S3_ENDPOINT/"; then break; fi
+            sleep 2
+          done
+          curl -sS --connect-timeout 2 -o /dev/null "$S3_ENDPOINT/"
       - name: Install dependencies
         run: npm ci --no-audit --fund=false
       - name: Dependency security gate
@@ -88,6 +96,8 @@ jobs:
           mkdir -p evidence/runtime
           docker ps -a > evidence/runtime/docker-ps.txt || true
           docker inspect postgres:18 --format='{{json .RepoDigests}}' > evidence/runtime/postgres-image-digest.json || true
+          docker logs s3-ci > evidence/runtime/s3-ci.log 2>&1 || true
+          docker inspect chrislusf/seaweedfs:4.48 --format='{{json .RepoDigests}}' > evidence/runtime/s3-image-digest.json || true
       - name: Upload CI evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -23,7 +23,7 @@ pass "free disk >= 8 GiB"
 curl -fsS --connect-timeout 5 --max-time 10 https://registry.npmjs.org/-/ping >/dev/null || fail "npm registry unreachable"
 pass "npm registry reachable"
 
-for image in postgres:18 semgrep/semgrep:latest; do
+for image in postgres:18 chrislusf/seaweedfs:4.48 semgrep/semgrep:latest; do
   docker pull "$image" >/dev/null || fail "cannot pull $image"
   digest="$(docker inspect --format='{{index .RepoDigests 0}}' "$image" 2>/dev/null || true)"
   echo "PASS image $image ${digest:-digest-unavailable}"

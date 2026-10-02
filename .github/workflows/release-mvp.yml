@@ -81,6 +81,15 @@ jobs:
 
       - name: Runner preflight
         run: ./scripts/runner-preflight.sh
+      - name: Start S3-compatible object storage
+        run: |
+          docker run -d --name s3-release -p 9000:8333 -e AWS_ACCESS_KEY_ID="$S3_ACCESS_KEY" -e AWS_SECRET_ACCESS_KEY="$S3_SECRET_KEY" -e S3_BUCKET="$S3_BUCKET" chrislusf/seaweedfs:4.48
+          for i in {1..45}; do
+            if curl -sS --connect-timeout 1 -o /dev/null "$S3_ENDPOINT/"; then break; fi
+            sleep 2
+          done
+          curl -sS --connect-timeout 2 -o /dev/null "$S3_ENDPOINT/"
+
 
       - name: Execute nine-gate automated core
         run: ./scripts/release-gate.sh
@@ -96,6 +105,7 @@ jobs:
           docker --version > release-artifacts/docker-version.txt
           git status --porcelain=v1 > release-artifacts/git-status.txt
           docker inspect postgres:18 --format='{{json .RepoDigests}}' > release-artifacts/postgres-image-digest.json || true
+          docker inspect chrislusf/seaweedfs:4.48 --format='{{json .RepoDigests}}' > release-artifacts/s3-image-digest.json || true
           node scripts/generate-artifact-manifest.mjs release-artifacts release-artifacts/artifact-manifest.json
 
       - uses: sigstore/cosign-installer@v3
