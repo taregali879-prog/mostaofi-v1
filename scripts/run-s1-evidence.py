@@ -59,7 +59,7 @@ def strict_validator(mode, out):
     if redocly:
         commands.append([redocly,'lint',str(SPEC),'--extends','recommended-strict'])
     else:
-        commands.append(['npx','--yes','@redocly/cli@1.34.5','lint',str(SPEC),'--extends','recommended-strict'])
+        commands.append(['npx','--yes','@redocly/cli@2.57.0','lint',str(SPEC),'--extends','recommended-strict'])
     for cmd in commands:
         try:
             r=subprocess.run(cmd,cwd=ROOT,text=True,capture_output=True,timeout=30)
