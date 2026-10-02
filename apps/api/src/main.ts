@@ -1,3 +1,4 @@
+import { validateProductionConfig } from './config/production-config';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';

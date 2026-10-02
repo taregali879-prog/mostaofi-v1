@@ -2,14 +2,34 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { validateProductionConfig } from '../src/config/production-config';
 
 describe('MVP Full Vertical Slice E2E',()=>{
  let app:INestApplication, token:string, projectId:string, boqId:string, boqItemId:string, requirementId:string, rfqId:string, quoteId:string, poId:string, poItemId:string, deliveryId:string, deliveryItemId:string;
  const warehouseId='01900000-0000-7000-8000-000000000301';
+ const runId=`${Date.now().toString(36)}-${process.pid}`;
  beforeAll(async()=>{const m=await Test.createTestingModule({imports:[AppModule]}).compile();app=m.createNestApplication();app.setGlobalPrefix('api/v1');await app.init()});
  afterAll(()=>app.close());
 
  it('health ready',async()=>{await request(app.getHttpServer()).get('/api/v1/health/ready').expect(200)});
+ it('production config fails closed and accepts a governed Git deployment',()=>{
+  const strong=(c:string)=>c.repeat(48);
+  const env:any={NODE_ENV:'production',DATABASE_URL:'postgresql://app:runtime@db.internal:5432/mostaofi',WEB_URL:'https://mostaofi.example',JWT_ACCESS_SECRET:strong('a'),JWT_REFRESH_SECRET:strong('b'),S3_ENDPOINT:'https://objects.example',S3_BUCKET:'mostaofi-prod',S3_ACCESS_KEY:'runtime-access',S3_SECRET_KEY:strong('c'),RAILWAY_GIT_COMMIT_SHA:'0123456789abcdef0123456789abcdef01234567',RAILWAY_GIT_BRANCH:'main',RAILWAY_GIT_REPO_NAME:'mostaofi-v1',RAILWAY_GIT_REPO_OWNER:'taregali879-prog'};
+  expect(()=>validateProductionConfig({NODE_ENV:'production'})).toThrow(/PRODUCTION_CONFIG_INVALID/);
+  expect(()=>validateProductionConfig({...env,RAILWAY_GIT_BRANCH:'feature/test'})).toThrow(/RAILWAY_GIT_BRANCH/);
+  expect(()=>validateProductionConfig({...env,JWT_ACCESS_SECRET:'dev-only-change-me'})).toThrow(/JWT_ACCESS_SECRET/);
+  expect(()=>validateProductionConfig(env)).not.toThrow();
+ });
+ it('release provenance exposes the Railway Git commit',async()=>{
+  const oldSha=process.env.RAILWAY_GIT_COMMIT_SHA, oldBranch=process.env.RAILWAY_GIT_BRANCH, oldRepo=process.env.RAILWAY_GIT_REPO_NAME, oldOwner=process.env.RAILWAY_GIT_REPO_OWNER;
+  process.env.RAILWAY_GIT_COMMIT_SHA='0123456789abcdef0123456789abcdef01234567';process.env.RAILWAY_GIT_BRANCH='main';process.env.RAILWAY_GIT_REPO_NAME='mostaofi-v1';process.env.RAILWAY_GIT_REPO_OWNER='taregali879-prog';
+  try{const r=await request(app.getHttpServer()).get('/api/v1/health/release').expect(200);expect(r.body).toEqual({source:'git',commitSha:'0123456789abcdef0123456789abcdef01234567',branch:'main',repo:'mostaofi-v1',owner:'taregali879-prog'});}finally{
+   if(oldSha===undefined)delete process.env.RAILWAY_GIT_COMMIT_SHA;else process.env.RAILWAY_GIT_COMMIT_SHA=oldSha;
+   if(oldBranch===undefined)delete process.env.RAILWAY_GIT_BRANCH;else process.env.RAILWAY_GIT_BRANCH=oldBranch;
+   if(oldRepo===undefined)delete process.env.RAILWAY_GIT_REPO_NAME;else process.env.RAILWAY_GIT_REPO_NAME=oldRepo;
+   if(oldOwner===undefined)delete process.env.RAILWAY_GIT_REPO_OWNER;else process.env.RAILWAY_GIT_REPO_OWNER=oldOwner;
+  }
+ });
  it('Login → Contractor → Project',async()=>{
   const login=await request(app.getHttpServer()).post('/api/v1/auth/login').send({email:'admin@partner.local',password:'ChangeMe123!'}).expect(201);token=login.body.accessToken;expect(token).toBeTruthy();
   await request(app.getHttpServer()).get('/api/v1/contractor-profile').set('Authorization',`Bearer ${token}`).expect(200);
@@ -36,11 +56,11 @@ describe('MVP Full Vertical Slice E2E',()=>{
   await request(app.getHttpServer()).post(`/api/v1/supplier-quotes/${quoteId}/submit`).set('Authorization',`Bearer ${token}`).expect(201);
   const cmp=await request(app.getHttpServer()).get(`/api/v1/rfqs/${rfqId}/comparison`).set('Authorization',`Bearer ${token}`).expect(200);expect(cmp.body[0].total).toBe(200);
   await request(app.getHttpServer()).post(`/api/v1/rfqs/${rfqId}/award`).set('Authorization',`Bearer ${token}`).send({quoteId}).expect(201);
-  const po=await request(app.getHttpServer()).post(`/api/v1/rfqs/${rfqId}/purchase-orders`).set('Authorization',`Bearer ${token}`).send({poNumber:'PO-E2E-001'}).expect(201);poId=po.body.id;poItemId=po.body.items[0].id;
+  const po=await request(app.getHttpServer()).post(`/api/v1/rfqs/${rfqId}/purchase-orders`).set('Authorization',`Bearer ${token}`).send({poNumber:`PO-E2E-${runId}`}).expect(201);poId=po.body.id;poItemId=po.body.items[0].id;
   await request(app.getHttpServer()).post(`/api/v1/purchase-orders/${poId}/approve`).set('Authorization',`Bearer ${token}`).expect(201);
  });
  it('Delivery → Inspection → Goods Receipt → Inventory',async()=>{
-  const d=await request(app.getHttpServer()).post(`/api/v1/purchase-orders/${poId}/deliveries`).set('Authorization',`Bearer ${token}`).send({deliveryNumber:'DEL-E2E-001',items:[{purchaseOrderItemId:poItemId,arrivedQty:8}]}).expect(201);deliveryId=d.body.id;deliveryItemId=d.body.items[0].id;
+  const d=await request(app.getHttpServer()).post(`/api/v1/purchase-orders/${poId}/deliveries`).set('Authorization',`Bearer ${token}`).send({deliveryNumber:`DEL-E2E-${runId}`,items:[{purchaseOrderItemId:poItemId,arrivedQty:8}]}).expect(201);deliveryId=d.body.id;deliveryItemId=d.body.items[0].id;
   await request(app.getHttpServer()).post(`/api/v1/deliveries/${deliveryId}/arrive`).set('Authorization',`Bearer ${token}`).expect(201);
   await request(app.getHttpServer()).post(`/api/v1/deliveries/${deliveryId}/inspect`).set('Authorization',`Bearer ${token}`).send({items:[{deliveryItemId,acceptedQty:7,rejectedQty:1,damagedQty:0}]}).expect(201);
   await request(app.getHttpServer()).post(`/api/v1/deliveries/${deliveryId}/receive`).set('Authorization',`Bearer ${token}`).send({warehouseId}).expect(201);

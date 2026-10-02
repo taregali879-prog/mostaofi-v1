@@ -1,0 +1,51 @@
+{
+  "repository": "taregali879-prog/mostaofi-v1",
+  "branch": "main",
+  "provenanceEndpoint": "/api/v1/health/release",
+  "requiredGitVariables": [
+    "RAILWAY_GIT_COMMIT_SHA",
+    "RAILWAY_GIT_BRANCH",
+    "RAILWAY_GIT_REPO_NAME",
+    "RAILWAY_GIT_REPO_OWNER"
+  ],
+  "services": {
+    "api": {
+      "name": "Mostaofi API Git",
+      "buildCommand": "npm ci && npm run db:generate && npm --workspace packages/contracts run build && npm --workspace apps/api run build",
+      "preDeployCommand": [
+        "npm --workspace apps/api run prisma:migrate"
+      ],
+      "startCommand": "node scripts/assert-railway-git-source.mjs && node apps/api/dist/main.js",
+      "healthcheckPath": "/api/v1/health/ready",
+      "healthcheckTimeout": 180,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 3,
+      "requiredRuntimeVariables": [
+        "DATABASE_URL",
+        "WEB_URL",
+        "JWT_ACCESS_SECRET",
+        "JWT_REFRESH_SECRET",
+        "S3_ENDPOINT",
+        "S3_BUCKET",
+        "S3_ACCESS_KEY",
+        "S3_SECRET_KEY"
+      ]
+    },
+    "web": {
+      "name": "Mostaofi Web Git",
+      "buildCommand": "npm ci && npm --workspace packages/contracts run build && npm --workspace apps/web run build",
+      "preDeployCommand": [],
+      "startCommand": "node scripts/assert-railway-git-source.mjs && npm --workspace apps/web run start -- -H 0.0.0.0 -p $PORT",
+      "healthcheckPath": "/login",
+      "healthcheckTimeout": 180,
+      "restartPolicyType": "ON_FAILURE",
+      "restartPolicyMaxRetries": 3,
+      "requiredRuntimeVariables": [
+        "NEXT_PUBLIC_API_URL"
+      ]
+    }
+  },
+  "requiredRuntimeVariables": [
+    "NODE_ENV"
+  ]
+}
