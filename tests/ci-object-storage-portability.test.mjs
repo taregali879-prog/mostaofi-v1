@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs';
 
 const ci = readFileSync('.github/workflows/ci.yml', 'utf8');
 const release = readFileSync('.github/workflows/release-mvp.yml', 'utf8');
+const preflight = readFileSync('scripts/runner-preflight.sh', 'utf8');
 const productionConfig = readFileSync('apps/api/src/config/production-config.ts', 'utf8');
 
-test('CI and release do not depend on unavailable MinIO runner images', () => {
-  for (const workflow of [ci, release]) {
-    assert.doesNotMatch(workflow, /minio\/minio:latest/);
-    assert.doesNotMatch(workflow, /minio\/mc:latest/);
-    assert.doesNotMatch(workflow, /docker logs minio/);
+test('CI, release, and preflight do not depend on unavailable MinIO runner images', () => {
+  for (const source of [ci, release, preflight]) {
+    assert.doesNotMatch(source, /minio\/minio:latest/);
+    assert.doesNotMatch(source, /minio\/mc:latest/);
+    assert.doesNotMatch(source, /docker logs minio/);
   }
 });
 
