@@ -41,3 +41,9 @@ test('maintenance journey uses governed HTTP endpoints rather than service metho
  for(const fragment of ['/maintenance/sla-policies','/maintenance/technicians','/maintenance/contracts','/visits','/work-orders','/inspection-templates','/inspections/','/findings']) assert.match(text,new RegExp(fragment.replaceAll('/','\\/')));
  assert.doesNotMatch(text,/MaintenanceContractsService|MaintenanceOperationsService|MaintenanceInspectionsService/);
 });
+
+test('preview DB and bucket assertions happen before Prisma initialization',()=>{
+ const text=source();
+ assert.ok(text.indexOf('assertPreviewDatabaseUrl(databaseUrl)') < text.indexOf('new PrismaClient()'));
+ assert.ok(text.indexOf('assertPreviewBucketName(bucket)') < text.indexOf('new PrismaClient()'));
+});

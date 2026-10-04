@@ -13,7 +13,7 @@ import {
   sha256Hex
 } from './lib/preview-runtime-gate.mjs';
 
-const db = new PrismaClient();
+let db = null;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function required(name) {
@@ -213,6 +213,7 @@ export async function runPreviewRuntimeGate() {
   const bucket = required('S3_BUCKET');
   assertPreviewDatabaseUrl(databaseUrl);
   assertPreviewBucketName(bucket);
+  db = new PrismaClient();
   let bootstrappedApi = null;
   let apiBase;
   if (process.env.PREVIEW_GATE_API_BASE) {
@@ -306,7 +307,7 @@ export async function runPreviewRuntimeGate() {
     try { await cleanup(state, s3); }
     catch (cleanupError) { if (!gateError) gateError = cleanupError; else console.error(`PREVIEW_GATE_CLEANUP_FAIL ${cleanupError.message}`); }
     if (bootstrappedApi?.app) await bootstrappedApi.app.close();
-    await db.$disconnect();
+    if (db) await db.$disconnect();
   }
   if (gateError) throw gateError;
   return true;
