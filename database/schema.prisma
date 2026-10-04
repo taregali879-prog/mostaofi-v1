@@ -109,6 +109,7 @@ model ContractorProfile {
   createdAt                DateTime         @default(now()) @map("created_at")
   updatedAt                DateTime         @updatedAt @map("updated_at")
   organization             Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  @@unique([organizationId, id])
   @@index([status])
   @@map("contractor_profiles")
 }
@@ -439,4 +440,608 @@ model InventoryMovement {
   @@index([organizationId, warehouseId, occurredAt])
   @@index([organizationId, projectId, occurredAt])
   @@map("inventory_movements")
+}
+
+
+enum TechnicianStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  @@map("technician_status")
+}
+enum SLAPolicyStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+  @@map("sla_policy_status")
+}
+enum MaintenanceContractStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  EXPIRING
+  EXPIRED
+  TERMINATED
+  CLOSED
+  @@map("maintenance_contract_status")
+}
+enum MaintenanceAssetStatus {
+  ACTIVE
+  OUT_OF_SERVICE
+  UNDER_REPAIR
+  REPLACED
+  RETIRED
+  @@map("maintenance_asset_status")
+}
+enum MaintenanceVisitKind {
+  PLANNED_MAINTENANCE
+  CORRECTIVE_REVISIT
+  CALL_OUT
+  FOLLOW_UP
+  @@map("maintenance_visit_kind")
+}
+enum MaintenanceVisitStatus {
+  PLANNED
+  SCHEDULED
+  CONFIRMED
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  RESCHEDULE_REQUIRED
+  NO_SHOW
+  OVERDUE
+  CANCELLED
+  @@map("maintenance_visit_status")
+}
+enum WorkOrderPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+  @@map("work_order_priority")
+}
+enum WorkOrderStatus {
+  DRAFT
+  PENDING_ASSIGNMENT
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  IN_PROGRESS
+  INSPECTION_COMPLETED
+  ACTION_REQUIRED
+  CLIENT_APPROVAL_PENDING
+  APPROVED
+  EXECUTION_IN_PROGRESS
+  COMPLETED
+  REPORT_PENDING
+  CLOSED
+  ON_HOLD
+  REVISIT_REQUIRED
+  REJECTED
+  CANCELLED
+  @@map("work_order_status")
+}
+enum AssignmentRole {
+  LEAD_TECHNICIAN
+  ASSISTANT
+  SPECIALIST
+  INSPECTOR
+  @@map("assignment_role")
+}
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  DECLINED
+  RELEASED
+  @@map("assignment_status")
+}
+enum InspectionTemplateStatus {
+  ACTIVE
+  RETIRED
+  @@map("inspection_template_status")
+}
+enum InspectionTemplateVersionStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  RETIRED
+  @@map("inspection_template_version_status")
+}
+enum InspectionAnswerType {
+  PASS_FAIL
+  YES_NO
+  NUMBER
+  TEXT
+  READING
+  PHOTO
+  VIDEO
+  MULTI_SELECT
+  SIGNATURE
+  @@map("inspection_answer_type")
+}
+enum InspectionStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  VOIDED
+  @@map("inspection_status")
+}
+enum InspectionAnswerResult {
+  PASS
+  FAIL
+  RECORDED
+  NOT_APPLICABLE
+  @@map("inspection_answer_result")
+}
+enum FindingClassificationStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+  @@map("finding_classification_status")
+}
+enum FindingType {
+  OBSERVATION
+  FAULT
+  VIOLATION
+  RECOMMENDATION
+  @@map("finding_type")
+}
+enum FindingSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  @@map("finding_severity")
+}
+enum FindingStatus {
+  OPEN
+  ACKNOWLEDGED
+  PROPOSAL_PENDING
+  APPROVAL_PENDING
+  APPROVED_FOR_ACTION
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+  ACCEPTED_RISK
+  CLOSED
+  VOIDED
+  @@map("finding_status")
+}
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+  @@map("idempotency_status")
+}
+enum DomainEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+  DEAD_LETTER
+  @@map("domain_event_status")
+}
+
+model Client {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  displayName String @map("display_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@map("client")
+}
+
+model Site {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  clientId String @db.Uuid @map("client_id")
+  displayName String @map("display_name")
+  city String?
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@map("site")
+}
+
+model Technician {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  contractorId String @db.Uuid @map("contractor_id")
+  userId String? @db.Uuid @map("user_id")
+  employeeCode String @map("employee_code")
+  displayName String @map("display_name")
+  mobile String
+  status TechnicianStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,employeeCode])
+  @@map("technician")
+}
+
+model SLAPolicy {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  name String
+  version Int
+  responseTargetMinutes Int @map("response_target_minutes")
+  arrivalTargetMinutes Int @map("arrival_target_minutes")
+  resolutionTargetMinutes Int @map("resolution_target_minutes")
+  workingHoursPolicy Json @map("working_hours_policy")
+  timezone String
+  status SLAPolicyStatus @default(DRAFT)
+  effectiveFrom DateTime @db.Date @map("effective_from")
+  effectiveTo DateTime? @db.Date @map("effective_to")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,name,version])
+  @@map("sla_policy")
+}
+
+model MaintenanceContract {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  contractNumber String @map("contract_number")
+  clientId String @db.Uuid @map("client_id")
+  contractorId String @db.Uuid @map("contractor_id")
+  contractType String @map("contract_type")
+  startDate DateTime @db.Date @map("start_date")
+  endDate DateTime @db.Date @map("end_date")
+  plannedVisits Int @map("planned_visits")
+  completedVisits Int @default(0) @map("completed_visits")
+  visitFrequencyType String @map("visit_frequency_type")
+  visitFrequencyValue Int @map("visit_frequency_value")
+  contractValue Decimal @db.Decimal(19,4) @map("contract_value")
+  vatAmount Decimal @db.Decimal(19,4) @map("vat_amount")
+  totalValue Decimal @db.Decimal(19,4) @map("total_value")
+  currency String @db.Char(3)
+  slaPolicyId String @db.Uuid @map("sla_policy_id")
+  status MaintenanceContractStatus @default(DRAFT)
+  activatedAt DateTime? @map("activated_at")
+  suspendedAt DateTime? @map("suspended_at")
+  closedAt DateTime? @map("closed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,contractNumber])
+  @@index([tenantId,status])
+  @@map("maintenance_contract")
+}
+
+model MaintenanceContractSite {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  contractId String @db.Uuid @map("contract_id")
+  siteId String @db.Uuid @map("site_id")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,contractId,siteId])
+  @@map("maintenance_contract_site")
+}
+
+model MaintenanceContractScope {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  contractId String @db.Uuid @map("contract_id")
+  scopeCategory String @map("scope_category")
+  serviceType String @map("service_type")
+  description String
+  included Boolean
+  visitLimit Int? @map("visit_limit")
+  notes String?
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@map("maintenance_contract_scope")
+}
+
+model MaintenanceAsset {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  siteId String @db.Uuid @map("site_id")
+  contractId String? @db.Uuid @map("contract_id")
+  assetCode String @map("asset_code")
+  assetType String @map("asset_type")
+  manufacturer String
+  model String
+  serialNumber String? @map("serial_number")
+  installationDate DateTime? @db.Date @map("installation_date")
+  commissionedAt DateTime? @map("commissioned_at")
+  locationDescription String @map("location_description")
+  status MaintenanceAssetStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,assetCode])
+  @@map("maintenance_asset")
+}
+
+model MaintenanceVisit {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  contractId String @db.Uuid @map("contract_id")
+  siteId String @db.Uuid @map("site_id")
+  previousVisitId String? @db.Uuid @map("previous_visit_id")
+  visitSequence Int @map("visit_sequence")
+  visitKind MaintenanceVisitKind @map("visit_kind")
+  scheduledStart DateTime @map("scheduled_start")
+  scheduledEnd DateTime @map("scheduled_end")
+  confirmedAt DateTime? @map("confirmed_at")
+  actualArrivalAt DateTime? @map("actual_arrival_at")
+  actualStartAt DateTime? @map("actual_start_at")
+  actualEndAt DateTime? @map("actual_end_at")
+  status MaintenanceVisitStatus @default(PLANNED)
+  rescheduleReason String? @map("reschedule_reason")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,contractId,visitSequence])
+  @@index([tenantId,status,scheduledStart])
+  @@map("maintenance_visit")
+}
+
+model WorkOrder {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  workOrderNumber String @map("work_order_number")
+  contractId String @db.Uuid @map("contract_id")
+  visitId String @db.Uuid @map("visit_id")
+  siteId String @db.Uuid @map("site_id")
+  contractorId String @db.Uuid @map("contractor_id")
+  serviceType String @map("service_type")
+  priority WorkOrderPriority @default(NORMAL)
+  scheduledStart DateTime @map("scheduled_start")
+  slaDeadline DateTime? @map("sla_deadline")
+  actualStartAt DateTime? @map("actual_start_at")
+  actualCompletionAt DateTime? @map("actual_completion_at")
+  status WorkOrderStatus @default(DRAFT)
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,workOrderNumber])
+  @@index([tenantId,status,scheduledStart])
+  @@map("work_order")
+}
+
+model WorkOrderAssignment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  workOrderId String @db.Uuid @map("work_order_id")
+  technicianId String @db.Uuid @map("technician_id")
+  role AssignmentRole
+  assignedAt DateTime @map("assigned_at")
+  acceptedAt DateTime? @map("accepted_at")
+  releasedAt DateTime? @map("released_at")
+  status AssignmentStatus @default(ASSIGNED)
+  assignedBy String @db.Uuid @map("assigned_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,workOrderId,technicianId,role])
+  @@map("work_order_assignment")
+}
+
+model InspectionTemplate {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  name String
+  serviceType String @map("service_type")
+  status InspectionTemplateStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@map("inspection_template")
+}
+
+model InspectionTemplateVersion {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  templateId String @db.Uuid @map("template_id")
+  versionNumber Int @map("version_number")
+  status InspectionTemplateVersionStatus @default(DRAFT)
+  effectiveFrom DateTime? @db.Date @map("effective_from")
+  publishedAt DateTime? @map("published_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,templateId,versionNumber])
+  @@map("inspection_template_version")
+}
+
+model InspectionSection {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  templateVersionId String @db.Uuid @map("template_version_id")
+  title String
+  displayOrder Int @map("display_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,templateVersionId,displayOrder])
+  @@map("inspection_section")
+}
+
+model InspectionItem {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  sectionId String @db.Uuid @map("section_id")
+  code String
+  question String
+  answerType InspectionAnswerType @map("answer_type")
+  required Boolean @default(true)
+  requiresEvidenceOnFail Boolean @default(false) @map("requires_evidence_on_fail")
+  displayOrder Int @map("display_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,sectionId,code])
+  @@unique([tenantId,sectionId,displayOrder])
+  @@map("inspection_item")
+}
+
+model Inspection {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  workOrderId String @db.Uuid @map("work_order_id")
+  templateVersionId String @db.Uuid @map("template_version_id")
+  startedAt DateTime @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  performedBy String @db.Uuid @map("performed_by")
+  status InspectionStatus @default(DRAFT)
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@index([tenantId,status])
+  @@map("inspection")
+}
+
+model InspectionAnswer {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  inspectionId String @db.Uuid @map("inspection_id")
+  inspectionItemId String @db.Uuid @map("inspection_item_id")
+  answerBoolean Boolean? @map("answer_boolean")
+  answerNumber Decimal? @map("answer_number")
+  answerText String? @map("answer_text")
+  answerJson Json? @map("answer_json")
+  result InspectionAnswerResult
+  recordedAt DateTime @map("recorded_at")
+  recordedBy String @db.Uuid @map("recorded_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,inspectionId,inspectionItemId])
+  @@map("inspection_answer")
+}
+
+model FindingClassification {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  code String
+  classificationType String @map("classification_type")
+  title String
+  description String
+  referenceSource String? @map("reference_source")
+  referenceVersion String? @map("reference_version")
+  referenceSection String? @map("reference_section")
+  status FindingClassificationStatus @default(DRAFT)
+  effectiveFrom DateTime? @db.Date @map("effective_from")
+  effectiveTo DateTime? @db.Date @map("effective_to")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,code])
+  @@map("finding_classification")
+}
+
+model Finding {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  workOrderId String @db.Uuid @map("work_order_id")
+  inspectionId String @db.Uuid @map("inspection_id")
+  inspectionItemId String? @db.Uuid @map("inspection_item_id")
+  assetId String? @db.Uuid @map("asset_id")
+  findingClassificationId String? @db.Uuid @map("finding_classification_id")
+  findingType FindingType @map("finding_type")
+  category String
+  title String
+  description String
+  severity FindingSeverity
+  riskLevel String @map("risk_level")
+  status FindingStatus @default(OPEN)
+  detectedBy String @db.Uuid @map("detected_by")
+  detectedAt DateTime @map("detected_at")
+  resolvedAt DateTime? @map("resolved_at")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@index([tenantId,status,severity])
+  @@map("finding")
+}
+
+model IdempotencyRecord {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  actorUserId String @db.Uuid @map("actor_user_id")
+  operationScope String @map("operation_scope")
+  idempotencyKey String @map("idempotency_key")
+  requestSha256 String @db.Char(64) @map("request_sha256")
+  responseStatus Int? @map("response_status")
+  responseJson Json? @map("response_json")
+  resourceType String? @map("resource_type")
+  resourceId String? @db.Uuid @map("resource_id")
+  status IdempotencyStatus @default(IN_PROGRESS)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@unique([tenantId,actorUserId,operationScope,idempotencyKey])
+  @@map("idempotency_record")
+}
+
+model DomainEvent {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  eventType String @map("event_type")
+  aggregateType String @map("aggregate_type")
+  aggregateId String @db.Uuid @map("aggregate_id")
+  payloadJson Json @map("payload_json")
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  publishedAt DateTime? @map("published_at")
+  status DomainEventStatus @default(PENDING)
+  correlationId String @db.Uuid @map("correlation_id")
+  causationId String? @db.Uuid @map("causation_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String? @db.Uuid @map("created_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy String? @db.Uuid @map("updated_by")
+  @@unique([tenantId,id])
+  @@map("domain_event")
 }
