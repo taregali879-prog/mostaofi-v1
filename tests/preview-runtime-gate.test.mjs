@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, PREVIEW_GATE_ADMIN_ROLES, canDeleteGateUser, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
+import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, PREVIEW_GATE_ADMIN_ROLES, PREVIEW_GATE_FIXTURES, canDeleteGateUser, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
 
 test('preview gate refuses any database except mostaofi_preview', () => {
   assert.doesNotThrow(() => assertPreviewDatabaseUrl('postgresql://u:p@db:5432/mostaofi_preview'));
@@ -10,6 +10,14 @@ test('preview gate refuses any database except mostaofi_preview', () => {
 test('preview gate refuses a non-preview bucket', () => {
   assert.doesNotThrow(() => assertPreviewBucketName('mostaofi-preview'));
   assert.throws(() => assertPreviewBucketName('mostaofi-production'), /PREVIEW_BUCKET_REQUIRED/);
+});
+
+test('preview gate uses stable fixture identities across deployments', () => {
+  assert.equal(PREVIEW_GATE_FIXTURES.orgA, '01990000-0000-7000-8000-000000000001');
+  assert.equal(PREVIEW_GATE_FIXTURES.orgB, '01990000-0000-7000-8000-000000000002');
+  assert.deepEqual(PREVIEW_GATE_FIXTURES.users.map((x) => x.email), [
+    'gate-viewer@preview.invalid', 'gate-admin-a@preview.invalid', 'gate-admin-b@preview.invalid'
+  ]);
 });
 
 test('gate cleanup never deletes an audit-linked actor', () => {

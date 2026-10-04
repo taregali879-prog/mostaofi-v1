@@ -5,6 +5,17 @@ const hex = (data) => createHash('sha256').update(data).digest('hex');
 
 export const PREVIEW_GATE_ADMIN_ROLES = Object.freeze(['ORG_ADMIN', 'PROJECT_MANAGER']);
 
+export const PREVIEW_GATE_FIXTURES = Object.freeze({
+  orgA: '01990000-0000-7000-8000-000000000001',
+  orgB: '01990000-0000-7000-8000-000000000002',
+  users: Object.freeze([
+    Object.freeze({ id: '01990000-0000-7000-8000-000000000101', email: 'gate-viewer@preview.invalid', org: 'A', roles: ['VIEWER'], displayName: 'Preview Gate Viewer' }),
+    Object.freeze({ id: '01990000-0000-7000-8000-000000000102', email: 'gate-admin-a@preview.invalid', org: 'A', roles: ['ORG_ADMIN', 'PROJECT_MANAGER'], displayName: 'Preview Gate Admin A' }),
+    Object.freeze({ id: '01990000-0000-7000-8000-000000000103', email: 'gate-admin-b@preview.invalid', org: 'B', roles: ['ORG_ADMIN'], displayName: 'Preview Gate Admin B' })
+  ])
+});
+
+
 export function canDeleteGateUser(auditCount) {
   return Number(auditCount ?? 0) === 0;
 }

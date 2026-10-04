@@ -6,6 +6,7 @@ import {
   assertPreviewBucketName,
   assertPreviewDatabaseUrl,
   PREVIEW_GATE_ADMIN_ROLES,
+  PREVIEW_GATE_FIXTURES,
   canDeleteGateUser,
   presignS3Request,
   sha256Hex
@@ -50,7 +51,9 @@ async function waitReady(base) {
     await sleep(500);
   }
   throw new Error('PREVIEW_API_NOT_READY');
-}async function prunePreviousGateResidue() {
+}
+
+async function prunePreviousGateResidue() {
   const staleUsers = await db.user.findMany({
     where: { email: { endsWith: '@preview.invalid' } },
     select: { id: true, _count: { select: { auditEvents: true } } }
@@ -79,15 +82,19 @@ async function waitReady(base) {
   console.log(`PREVIEW_GATE_PRUNE users=${staleUserIds.length} retained_audit_users=${retainedAuditUsers} removed_orgs=${removedOrgs} retained_audit_orgs=${retainedAuditOrgs}`);
 }
 
-async function createUser(organizationId, roles, email, password, displayName) {
-  const userId = randomUUID();
-  await db.user.create({
-    data: { id: userId, email, displayName, passwordHash: passwordHash(password) }
+async function ensureUser(id, organizationId, roles, email, password, displayName) {
+  const encoded = passwordHash(password);
+  await db.user.upsert({
+    where: { id },
+    update: { email, displayName, passwordHash: encoded },
+    create: { id, email, displayName, passwordHash: encoded }
   });
-  await db.membership.create({
-    data: { id: randomUUID(), userId, organizationId, roles }
+  await db.membership.upsert({
+    where: { userId_organizationId: { userId: id, organizationId } },
+    update: { roles },
+    create: { id: randomUUID(), userId: id, organizationId, roles }
   });
-  return userId;
+  return id;
 }
 
 async function login(base, email, password) {
@@ -110,19 +117,10 @@ async function cleanup(state, s3) {
   if (state.documentId) {
     await db.documentVersion.deleteMany({ where: { documentId: state.documentId } });
     await db.document.deleteMany({ where: { id: state.documentId } });
-  }  if (state.projectId) await db.project.deleteMany({ where: { id: state.projectId } });
+  }
+  if (state.projectId) await db.project.deleteMany({ where: { id: state.projectId } });
   if (state.userIds.length) {
     await db.authSession.deleteMany({ where: { userId: { in: state.userIds } } });
-    await db.membership.deleteMany({ where: { userId: { in: state.userIds } } });
-    const users = await db.user.findMany({
-      where: { id: { in: state.userIds } },
-      select: { id: true, _count: { select: { auditEvents: true } } }
-    });
-    const deletable = users.filter((x) => canDeleteGateUser(x._count.auditEvents)).map((x) => x.id);
-    if (deletable.length) await db.user.deleteMany({ where: { id: { in: deletable } } });
-  }
-  if (state.organizationIds.length) {
-    await db.organization.deleteMany({ where: { id: { in: state.organizationIds } } });
   }
 }
 
@@ -140,9 +138,10 @@ export async function runPreviewRuntimeGate() {
     accessKey: required('S3_ACCESS_KEY'),
     secretKey: required('S3_SECRET_KEY'),
     urlStyle: process.env.S3_URL_STYLE ?? 'path'
-  };  const runId = `${Date.now()}-${randomUUID().slice(0, 8)}`;
+  };
+  const runId = `${Date.now()}-${randomUUID().slice(0, 8)}`;
   const password = `Gate-${randomUUID()}!`;
-  const state = { organizationIds: [], userIds: [], projectId: null, documentId: null, objectKey: null };
+  const state = { userIds: [], projectId: null, documentId: null, objectKey: null };
   let gateError = null;
   console.log(`PREVIEW_GATE_START ${runId}`);
 
@@ -152,21 +151,19 @@ export async function runPreviewRuntimeGate() {
     await api(apiBase, '/api/v1/projects', { expected: 401 });
     console.log('PREVIEW_GATE_PASS auth_401');
 
-    const orgA = randomUUID(), orgB = randomUUID();
-    state.organizationIds.push(orgA, orgB);
-    await db.organization.create({ data: { id: orgA, name: `Preview Gate A ${runId}` } });
-    await db.organization.create({ data: { id: orgB, name: `Preview Gate B ${runId}` } });
+    const orgA = PREVIEW_GATE_FIXTURES.orgA, orgB = PREVIEW_GATE_FIXTURES.orgB;
+    await db.organization.upsert({ where: { id: orgA }, update: { name: 'Preview Gate Fixture A' }, create: { id: orgA, name: 'Preview Gate Fixture A' } });
+    await db.organization.upsert({ where: { id: orgB }, update: { name: 'Preview Gate Fixture B' }, create: { id: orgB, name: 'Preview Gate Fixture B' } });
 
-    const viewerEmail = `viewer-${runId}@preview.invalid`;
-    const adminAEmail = `admin-a-${runId}@preview.invalid`;
-    const adminBEmail = `admin-b-${runId}@preview.invalid`;
-    state.userIds.push(await createUser(orgA, ['VIEWER'], viewerEmail, password, 'Preview Viewer'));
-    state.userIds.push(await createUser(orgA, PREVIEW_GATE_ADMIN_ROLES, adminAEmail, password, 'Preview Admin A'));
-    state.userIds.push(await createUser(orgB, ['ORG_ADMIN'], adminBEmail, password, 'Preview Admin B'));
+    const [viewerFixture, adminAFixture, adminBFixture] = PREVIEW_GATE_FIXTURES.users;
+    state.userIds.push(await ensureUser(viewerFixture.id, orgA, viewerFixture.roles, viewerFixture.email, password, viewerFixture.displayName));
+    state.userIds.push(await ensureUser(adminAFixture.id, orgA, PREVIEW_GATE_ADMIN_ROLES, adminAFixture.email, password, adminAFixture.displayName));
+    state.userIds.push(await ensureUser(adminBFixture.id, orgB, adminBFixture.roles, adminBFixture.email, password, adminBFixture.displayName));
 
-    const viewerToken = await login(apiBase, viewerEmail, password);
-    const adminAToken = await login(apiBase, adminAEmail, password);
-    const adminBToken = await login(apiBase, adminBEmail, password);    await api(apiBase, '/api/v1/projects', {
+    const viewerToken = await login(apiBase, viewerFixture.email, password);
+    const adminAToken = await login(apiBase, adminAFixture.email, password);
+    const adminBToken = await login(apiBase, adminBFixture.email, password);
+    await api(apiBase, '/api/v1/projects', {
       method: 'POST', token: viewerToken,
       body: { name: 'Forbidden Preview Project', clientName: 'Gate', city: 'Jazan', scope: 'RBAC' },
       expected: 403
@@ -189,7 +186,9 @@ export async function runPreviewRuntimeGate() {
       expected: 201
     });
     state.documentId = intent.documentId;
-    state.objectKey = intent.storageKey;    const putResponse = await fetch(intent.uploadUrl, {
+    state.objectKey = intent.storageKey;
+
+    const putResponse = await fetch(intent.uploadUrl, {
       method: 'PUT', headers: intent.headers ?? { 'content-type': 'application/octet-stream' }, body: content
     });
     if (!putResponse.ok) throw new Error(`BUCKET_PUT_${putResponse.status}`);
@@ -213,7 +212,8 @@ export async function runPreviewRuntimeGate() {
     try { await cleanup(state, s3); }
     catch (cleanupError) { if (!gateError) gateError = cleanupError; else console.error(`PREVIEW_GATE_CLEANUP_FAIL ${cleanupError.message}`); }
     await db.$disconnect();
-  }  if (gateError) throw gateError;
+  }
+  if (gateError) throw gateError;
   return true;
 }
 
