@@ -19,6 +19,7 @@ describe('Maintenance command infrastructure',()=>{
  beforeAll(async()=>{
   const m=await Test.createTestingModule({imports:[DatabaseModule,AuditModule],providers:[MaintenanceCommandService]}).compile();
   db=m.get(PrismaService);tenant=m.get(TenantTransactionService);commands=m.get(MaintenanceCommandService);audit=m.get(AuditService);domain=m.get(DomainEventService);
+  await db.$executeRawUnsafe("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'mostaofi_runtime_slice') THEN CREATE ROLE mostaofi_runtime_slice NOLOGIN; END IF; END $$");
   await db.$executeRawUnsafe('GRANT SELECT ON TABLE client TO mostaofi_runtime_slice');
  });
  afterAll(()=>db.$disconnect());
