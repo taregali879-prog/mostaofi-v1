@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
+import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, PREVIEW_GATE_ADMIN_ROLES, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
 
 test('preview gate refuses any database except mostaofi_preview', () => {
   assert.doesNotThrow(() => assertPreviewDatabaseUrl('postgresql://u:p@db:5432/mostaofi_preview'));
@@ -10,6 +10,10 @@ test('preview gate refuses any database except mostaofi_preview', () => {
 test('preview gate refuses a non-preview bucket', () => {
   assert.doesNotThrow(() => assertPreviewBucketName('mostaofi-preview'));
   assert.throws(() => assertPreviewBucketName('mostaofi-production'), /PREVIEW_BUCKET_REQUIRED/);
+});
+
+test('preview gate admin roles satisfy project and document write guards', () => {
+  assert.deepEqual(PREVIEW_GATE_ADMIN_ROLES, ['ORG_ADMIN', 'PROJECT_MANAGER']);
 });
 
 test('preview gate only targets localhost HTTP', () => {
