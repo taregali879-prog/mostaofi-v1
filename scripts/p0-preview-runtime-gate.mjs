@@ -6,6 +6,7 @@ import {
   assertPreviewBucketName,
   assertPreviewDatabaseUrl,
   PREVIEW_GATE_ADMIN_ROLES,
+  canDeleteGateUser,
   presignS3Request,
   sha256Hex
 } from './lib/preview-runtime-gate.mjs';
@@ -51,13 +52,15 @@ async function waitReady(base) {
   throw new Error('PREVIEW_API_NOT_READY');
 }async function prunePreviousGateResidue() {
   const staleUsers = await db.user.findMany({
-    where: { email: { endsWith: '@preview.invalid' } }, select: { id: true }
+    where: { email: { endsWith: '@preview.invalid' } },
+    select: { id: true, _count: { select: { auditEvents: true } } }
   });
   const staleUserIds = staleUsers.map((x) => x.id);
   if (staleUserIds.length) {
     await db.authSession.deleteMany({ where: { userId: { in: staleUserIds } } });
     await db.membership.deleteMany({ where: { userId: { in: staleUserIds } } });
-    await db.user.deleteMany({ where: { id: { in: staleUserIds } } });
+    const deletable = staleUsers.filter((x) => canDeleteGateUser(x._count.auditEvents)).map((x) => x.id);
+    if (deletable.length) await db.user.deleteMany({ where: { id: { in: deletable } } });
   }
 
   const gateOrgs = await db.organization.findMany({
@@ -72,7 +75,8 @@ async function waitReady(base) {
     await db.organization.delete({ where: { id: org.id } });
     removedOrgs += 1;
   }
-  console.log(`PREVIEW_GATE_PRUNE users=${staleUserIds.length} removed_orgs=${removedOrgs} retained_audit_orgs=${retainedAuditOrgs}`);
+  const retainedAuditUsers = staleUsers.filter((x) => !canDeleteGateUser(x._count.auditEvents)).length;
+  console.log(`PREVIEW_GATE_PRUNE users=${staleUserIds.length} retained_audit_users=${retainedAuditUsers} removed_orgs=${removedOrgs} retained_audit_orgs=${retainedAuditOrgs}`);
 }
 
 async function createUser(organizationId, roles, email, password, displayName) {
@@ -110,7 +114,12 @@ async function cleanup(state, s3) {
   if (state.userIds.length) {
     await db.authSession.deleteMany({ where: { userId: { in: state.userIds } } });
     await db.membership.deleteMany({ where: { userId: { in: state.userIds } } });
-    await db.user.deleteMany({ where: { id: { in: state.userIds } } });
+    const users = await db.user.findMany({
+      where: { id: { in: state.userIds } },
+      select: { id: true, _count: { select: { auditEvents: true } } }
+    });
+    const deletable = users.filter((x) => canDeleteGateUser(x._count.auditEvents)).map((x) => x.id);
+    if (deletable.length) await db.user.deleteMany({ where: { id: { in: deletable } } });
   }
   if (state.organizationIds.length) {
     await db.organization.deleteMany({ where: { id: { in: state.organizationIds } } });

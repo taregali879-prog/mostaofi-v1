@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, PREVIEW_GATE_ADMIN_ROLES, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
+import { assertPreviewDatabaseUrl, assertPreviewBucketName, assertLocalApiBase, PREVIEW_GATE_ADMIN_ROLES, canDeleteGateUser, presignS3Request, sha256Hex } from '../scripts/lib/preview-runtime-gate.mjs';
 
 test('preview gate refuses any database except mostaofi_preview', () => {
   assert.doesNotThrow(() => assertPreviewDatabaseUrl('postgresql://u:p@db:5432/mostaofi_preview'));
@@ -10,6 +10,12 @@ test('preview gate refuses any database except mostaofi_preview', () => {
 test('preview gate refuses a non-preview bucket', () => {
   assert.doesNotThrow(() => assertPreviewBucketName('mostaofi-preview'));
   assert.throws(() => assertPreviewBucketName('mostaofi-production'), /PREVIEW_BUCKET_REQUIRED/);
+});
+
+test('gate cleanup never deletes an audit-linked actor', () => {
+  assert.equal(canDeleteGateUser(0), true);
+  assert.equal(canDeleteGateUser(1), false);
+  assert.equal(canDeleteGateUser(9), false);
 });
 
 test('preview gate admin roles satisfy project and document write guards', () => {

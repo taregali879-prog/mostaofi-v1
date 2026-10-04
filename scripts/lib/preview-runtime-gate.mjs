@@ -5,6 +5,10 @@ const hex = (data) => createHash('sha256').update(data).digest('hex');
 
 export const PREVIEW_GATE_ADMIN_ROLES = Object.freeze(['ORG_ADMIN', 'PROJECT_MANAGER']);
 
+export function canDeleteGateUser(auditCount) {
+  return Number(auditCount ?? 0) === 0;
+}
+
 export function sha256Hex(data) {
   return createHash('sha256').update(data).digest('hex');
 }
