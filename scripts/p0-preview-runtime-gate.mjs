@@ -8,6 +8,7 @@ import {
   PREVIEW_GATE_ADMIN_ROLES,
   PREVIEW_GATE_FIXTURES,
   canDeleteGateUser,
+  governedCommandHeaders,
   presignS3Request,
   sha256Hex
 } from './lib/preview-runtime-gate.mjs';
@@ -25,21 +26,30 @@ function passwordHash(password) {
   const salt = randomBytes(16);
   const hash = scryptSync(password, salt, 64);
   return `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
-}async function api(base, path, { method = 'GET', token, body, expected } = {}) {
-  const headers = {};
-  if (token) headers.authorization = `Bearer ${token}`;
+}
+async function api(base, path, { method = 'GET', token, body, expected, idempotencyKey, ifMatch, withMeta = false } = {}) {
+  const headers = governedCommandHeaders({ token, idempotencyKey, ifMatch });
   if (body !== undefined) headers['content-type'] = 'application/json';
-  const response = await fetch(`${base}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
+  const response = await fetch(`${base}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   if (expected !== undefined && response.status !== expected) {
     const text = await response.text();
     throw new Error(`HTTP_${method}_${path}_${response.status}:${text.slice(0, 180)}`);
   }
   const type = response.headers.get('content-type') ?? '';
-  return type.includes('application/json') ? response.json() : response.text();
+  const parsed = type.includes('application/json') ? await response.json() : await response.text();
+  return withMeta ? { body: parsed, etag: response.headers.get('etag'), status: response.status } : parsed;
+}
+
+async function bootstrapPreviewApi() {
+  const [{ NestFactory }, { ValidationPipe }, { AppModule }] = await Promise.all([
+    import('@nestjs/core'), import('@nestjs/common'), import('../apps/api/dist/app.module.js')
+  ]);
+  const app = await NestFactory.create(AppModule, { logger: false });
+  app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  const port = Number(process.env.PREVIEW_GATE_PORT ?? 4101);
+  await app.listen(port, '127.0.0.1');
+  return { app, base: `http://127.0.0.1:${port}` };
 }
 
 async function waitReady(base) {
@@ -107,6 +117,31 @@ async function login(base, email, password) {
   return result.accessToken;
 }
 
+async function tenantTransaction(tenantId, actorId, work) {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe("SELECT set_config('app.tenant_id', $1::text, true)", tenantId);
+    await tx.$executeRawUnsafe("SELECT set_config('app.actor_user_id', $1::text, true)", actorId);
+    return work(tx);
+  });
+}
+
+async function maintenanceCoreFixtures(orgA, actorId) {
+  const clientId = '01990000-0000-7000-8000-000000000201';
+  const siteId = '01990000-0000-7000-8000-000000000202';
+  const contractor = await db.contractorProfile.upsert({
+    where: { organizationId: orgA },
+    update: { legalName: 'Preview Gate Contractor', commercialRegistrationNo: '9090909090', status: 'APPROVED' },
+    create: { id: '01990000-0000-7000-8000-000000000203', organizationId: orgA, legalName: 'Preview Gate Contractor', commercialRegistrationNo: '9090909090', status: 'APPROVED' }
+  });
+  await tenantTransaction(orgA, actorId, async (tx) => {
+    await tx.client.upsert({ where: { id: clientId }, update: { displayName: 'Preview Gate Client', updatedBy: actorId }, create: { id: clientId, tenantId: orgA, displayName: 'Preview Gate Client', createdBy: actorId, updatedBy: actorId } });
+    await tx.site.upsert({ where: { id: siteId }, update: { displayName: 'Preview Gate Site', city: 'Jazan', updatedBy: actorId }, create: { id: siteId, tenantId: orgA, clientId, displayName: 'Preview Gate Site', city: 'Jazan', createdBy: actorId, updatedBy: actorId } });
+  });
+  return { clientId, siteId, contractorId: contractor.id };
+}
+
+const command = (base, path, { token, key, ifMatch, body = {}, expected = 200, method = 'POST' }) => api(base, path, { method, token, body, expected, idempotencyKey: key, ifMatch, withMeta: true });
+
 async function cleanup(state, s3) {
   if (state.objectKey) {
     try {
@@ -124,13 +159,70 @@ async function cleanup(state, s3) {
   }
 }
 
+async function runMaintenanceJourney(base, { viewerToken, adminAToken, adminBToken, orgA, adminAId, runId }) {
+  const core = await maintenanceCoreFixtures(orgA, adminAId);
+  const slaBody = { name:`Preview Gate SLA ${runId}`, responseTargetMinutes:30, arrivalTargetMinutes:60, resolutionTargetMinutes:240, workingHoursPolicy:{}, timezone:'Asia/Riyadh', effectiveFrom:'2026-10-04' };
+  await api(base, '/api/v1/maintenance/sla-policies', { method:'POST', token:viewerToken, body:slaBody, expected:403, idempotencyKey:`maintenance-viewer-${runId}` });
+  console.log('PREVIEW_GATE_PASS maintenance_rbac');
+
+  const sla = await command(base, '/api/v1/maintenance/sla-policies', { token:adminAToken, key:`maintenance-sla-${runId}`, body:slaBody, expected:201 });
+  const technician = await command(base, '/api/v1/maintenance/technicians', { token:adminAToken, key:`maintenance-tech-${runId}`, body:{ contractorId:core.contractorId, employeeCode:`PG-${runId}`, displayName:'Preview Gate Technician', mobile:'0500000777' }, expected:201 });
+  const contract = await command(base, '/api/v1/maintenance/contracts', { token:adminAToken, key:`maintenance-contract-${runId}`, body:{ clientId:core.clientId, contractorId:core.contractorId, contractType:'PREVENTIVE', startDate:'2026-10-04', endDate:'2027-10-03', plannedVisits:12, visitFrequencyType:'MONTH', visitFrequencyValue:1, contractValue:12000, vatAmount:1800, currency:'SAR', slaPolicyId:sla.body.id }, expected:201 });
+  let contractEtag=contract.etag;
+  await api(base, `/api/v1/maintenance/contracts/${contract.body.id}`, { token:adminBToken, expected:404 });
+  console.log('PREVIEW_GATE_PASS maintenance_tenant_isolation');
+
+  const site = await command(base, `/api/v1/maintenance/contracts/${contract.body.id}/sites`, { token:adminAToken, key:`maintenance-site-${runId}`, ifMatch:contractEtag, body:{siteId:core.siteId}, expected:201 }); contractEtag=site.etag;
+  const scope = await command(base, `/api/v1/maintenance/contracts/${contract.body.id}/scopes`, { token:adminAToken, key:`maintenance-scope-${runId}`, ifMatch:contractEtag, body:{scopeCategory:'FIRE',serviceType:'PREVENTIVE',description:'Preview fire maintenance',included:true,visitLimit:12}, expected:201 }); contractEtag=scope.etag;
+  const submitted = await command(base, `/api/v1/maintenance/contracts/${contract.body.id}/submit`, { token:adminAToken, key:`maintenance-submit-${runId}`, ifMatch:contractEtag }); contractEtag=submitted.etag;
+  const activated = await command(base, `/api/v1/maintenance/contracts/${contract.body.id}/activate`, { token:adminAToken, key:`maintenance-activate-${runId}`, ifMatch:contractEtag }); contractEtag=activated.etag;
+  const visit = await command(base, `/api/v1/maintenance/contracts/${contract.body.id}/visits`, { token:adminAToken, key:`maintenance-visit-${runId}`, ifMatch:contractEtag, body:{siteId:core.siteId,visitKind:'PLANNED_MAINTENANCE',scheduledStart:'2026-10-10T08:00:00Z',scheduledEnd:'2026-10-10T10:00:00Z'}, expected:201 });
+  let visitState=await api(base, `/api/v1/maintenance/visits/${visit.body.id}`, {token:adminAToken,expected:200,withMeta:true}), visitEtag=visitState.etag;
+  for (const action of ['schedule','confirm','arrive','start']) { const r=await command(base, `/api/v1/maintenance/visits/${visit.body.id}/${action}`, { token:adminAToken,key:`maintenance-visit-${action}-${runId}`,ifMatch:visitEtag }); visitEtag=r.etag; }
+
+  const workOrder = await command(base, `/api/v1/maintenance/visits/${visit.body.id}/work-orders`, { token:adminAToken,key:`maintenance-wo-${runId}`,ifMatch:visitEtag,body:{serviceType:'PREVENTIVE',priority:'HIGH',scheduledStart:'2026-10-10T08:30:00Z',slaDeadline:'2026-10-10T12:00:00Z'},expected:201 });
+  let woState=await api(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}`, {token:adminAToken,expected:200,withMeta:true}), woEtag=woState.etag;
+  const assignment=await command(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}/assignments`, { token:adminAToken,key:`maintenance-assign-${runId}`,ifMatch:woEtag,body:{technicianId:technician.body.id,role:'LEAD_TECHNICIAN'},expected:201 }); woEtag=assignment.etag;
+  const accepted=await command(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}/assignments/${assignment.body.id}/accept`, { token:adminAToken,key:`maintenance-accept-${runId}`,ifMatch:woEtag }); woEtag=accepted.etag;
+  const arrived=await command(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}/arrive`, { token:adminAToken,key:`maintenance-wo-arrive-${runId}`,ifMatch:woEtag }); woEtag=arrived.etag;
+  const started=await command(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}/start`, { token:adminAToken,key:`maintenance-wo-start-${runId}`,ifMatch:woEtag }); woEtag=started.etag;
+
+  const template=await command(base, '/api/v1/maintenance/inspection-templates', {token:adminAToken,key:`maintenance-template-${runId}`,body:{name:`Preview Gate Template ${runId}`,serviceType:'PREVENTIVE'},expected:201});
+  const version=await command(base, `/api/v1/maintenance/inspection-templates/${template.body.id}/versions`, {token:adminAToken,key:`maintenance-version-${runId}`,ifMatch:template.etag,body:{effectiveFrom:'2026-10-04'},expected:201});
+  let versionState=await api(base, `/api/v1/maintenance/inspection-template-versions/${version.body.id}`, {token:adminAToken,expected:200,withMeta:true}),versionEtag=versionState.etag;
+  const section=await command(base, `/api/v1/maintenance/inspection-template-versions/${version.body.id}/sections`, {token:adminAToken,key:`maintenance-section-${runId}`,ifMatch:versionEtag,body:{title:'Fire Alarm',displayOrder:1},expected:201});
+  const item=await command(base, `/api/v1/maintenance/inspection-sections/${section.body.id}/items`, {token:adminAToken,key:`maintenance-item-${runId}`,ifMatch:section.etag,body:{code:'PG-001',question:'Detector operational?',answerType:'PASS_FAIL',required:true,requiresEvidenceOnFail:false,displayOrder:1},expected:201});
+  versionState=await api(base, `/api/v1/maintenance/inspection-template-versions/${version.body.id}`, {token:adminAToken,expected:200,withMeta:true});versionEtag=versionState.etag;
+  const review=await command(base, `/api/v1/maintenance/inspection-template-versions/${version.body.id}/submit-review`, {token:adminAToken,key:`maintenance-review-${runId}`,ifMatch:versionEtag});versionEtag=review.etag;
+  await command(base, `/api/v1/maintenance/inspection-template-versions/${version.body.id}/publish`, {token:adminAToken,key:`maintenance-publish-${runId}`,ifMatch:versionEtag});
+
+  const inspection=await command(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}/inspections`, {token:adminAToken,key:`maintenance-inspection-${runId}`,ifMatch:woEtag,body:{templateVersionId:version.body.id,performedBy:technician.body.id},expected:201});
+  let inspectionState=await api(base, `/api/v1/maintenance/inspections/${inspection.body.id}`, {token:adminAToken,expected:200,withMeta:true}),inspectionEtag=inspectionState.etag;
+  const inspectionStarted=await command(base, `/api/v1/maintenance/inspections/${inspection.body.id}/start`, {token:adminAToken,key:`maintenance-inspection-start-${runId}`,ifMatch:inspectionEtag});inspectionEtag=inspectionStarted.etag;
+  const answer=await api(base, `/api/v1/maintenance/inspections/${inspection.body.id}/answers/${item.body.id}`, {method:'PUT',token:adminAToken,body:{answerBoolean:false,result:'FAIL',recordedAt:new Date().toISOString()},expected:200,idempotencyKey:`maintenance-answer-${runId}`,ifMatch:inspectionEtag,withMeta:true});inspectionEtag=answer.etag;
+  const completed=await command(base, `/api/v1/maintenance/inspections/${inspection.body.id}/complete`, {token:adminAToken,key:`maintenance-inspection-complete-${runId}`,ifMatch:inspectionEtag});inspectionEtag=completed.etag;
+  const finding=await command(base, `/api/v1/maintenance/inspections/${inspection.body.id}/findings`, {token:adminAToken,key:`maintenance-finding-${runId}`,ifMatch:inspectionEtag,body:{inspectionItemId:item.body.id,findingType:'FAULT',category:'FIRE_ALARM',title:`Preview detector fault ${runId}`,description:'Gate-detected fault',severity:'HIGH',riskLevel:'HIGH'},expected:201});
+  await api(base, `/api/v1/maintenance/findings/${finding.body.id}`, {token:adminBToken,expected:404});
+  const finalWorkOrder=await api(base, `/api/v1/maintenance/work-orders/${workOrder.body.id}`, {token:adminAToken,expected:200});
+  if(finalWorkOrder.status!=='ACTION_REQUIRED'||finding.body.status!=='OPEN')throw new Error('MAINTENANCE_VERTICAL_STATE_MISMATCH');
+  console.log('PREVIEW_GATE_PASS maintenance_vertical');
+}
+
 export async function runPreviewRuntimeGate() {
   const databaseUrl = required('DATABASE_URL');
   const bucket = required('S3_BUCKET');
   assertPreviewDatabaseUrl(databaseUrl);
   assertPreviewBucketName(bucket);
-  const apiBase = process.env.PREVIEW_GATE_API_BASE ?? `http://127.0.0.1:${process.env.PORT ?? '4000'}`;
-  assertLocalApiBase(apiBase);
+  let bootstrappedApi = null;
+  let apiBase;
+  if (process.env.PREVIEW_GATE_API_BASE) {
+    apiBase = process.env.PREVIEW_GATE_API_BASE;
+    assertLocalApiBase(apiBase);
+  } else {
+    bootstrappedApi = await bootstrapPreviewApi();
+    apiBase = bootstrappedApi.base;
+    assertLocalApiBase(apiBase);
+  }
   const s3 = {
     endpoint: required('S3_ENDPOINT'),
     region: process.env.S3_REGION ?? 'auto',
@@ -179,6 +271,8 @@ export async function runPreviewRuntimeGate() {
     await api(apiBase, `/api/v1/projects/${project.id}`, { token: adminAToken, expected: 200 });
     console.log('PREVIEW_GATE_PASS tenant_isolation');
 
+    await runMaintenanceJourney(apiBase, { viewerToken, adminAToken, adminBToken, orgA, adminAId: adminAFixture.id, runId });
+
     const content = randomBytes(96);
     const intent = await api(apiBase, `/api/v1/projects/${project.id}/documents/upload-intent`, {
       method: 'POST', token: adminAToken,
@@ -211,6 +305,7 @@ export async function runPreviewRuntimeGate() {
   } finally {
     try { await cleanup(state, s3); }
     catch (cleanupError) { if (!gateError) gateError = cleanupError; else console.error(`PREVIEW_GATE_CLEANUP_FAIL ${cleanupError.message}`); }
+    if (bootstrappedApi?.app) await bootstrappedApi.app.close();
     await db.$disconnect();
   }
   if (gateError) throw gateError;

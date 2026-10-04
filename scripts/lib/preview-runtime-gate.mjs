@@ -4,6 +4,21 @@ const h = (key, data) => createHmac('sha256', key).update(data).digest();
 const hex = (data) => createHash('sha256').update(data).digest('hex');
 
 export const PREVIEW_GATE_ADMIN_ROLES = Object.freeze(['ORG_ADMIN', 'PROJECT_MANAGER']);
+export const REQUIRED_MAINTENANCE_MARKERS = Object.freeze([
+  'maintenance_rbac', 'maintenance_tenant_isolation', 'maintenance_vertical', 'bucket_roundtrip', 'all'
+]);
+
+export function governedCommandHeaders({ token, idempotencyKey, ifMatch } = {}) {
+  const headers = {};
+  if (token) headers.authorization = `Bearer ${token}`;
+  if (idempotencyKey) headers['idempotency-key'] = idempotencyKey;
+  if (ifMatch) headers['if-match'] = ifMatch;
+  return headers;
+}
+
+export function canDeleteAuditedOperationalRecord(auditCount) {
+  return Number(auditCount ?? 0) === 0;
+}
 
 export const PREVIEW_GATE_FIXTURES = Object.freeze({
   orgA: '01990000-0000-7000-8000-000000000001',
