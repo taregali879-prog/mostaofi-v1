@@ -22,10 +22,6 @@ export class MaintenanceCommandService {
 
   async execute<T>(ctx:TenantActorContext,options:ExecuteOptions,work:(tx:Prisma.TransactionClient)=>Promise<{body:T;updatedAt:Date}>):Promise<{body:T;etag:string;replayed:boolean}>{
     if(!options.meta.idempotencyKey) throw new HttpException('IDEMPOTENCY_KEY_REQUIRED',400);
-    if(options.currentUpdatedAt){
-      if(!options.meta.ifMatch) throw new HttpException('PRECONDITION_REQUIRED',428);
-      if(options.meta.ifMatch!==etagForUpdatedAt(options.currentUpdatedAt)) throw new ConflictException('CONCURRENT_MODIFICATION');
-    }
     const sha=requestHash(options.requestBody);
     return this.tenant.run(ctx,async tx=>{
       const existing=await tx.idempotencyRecord.findFirst({where:{tenantId:ctx.org,actorUserId:ctx.sub,operationScope:options.operationScope,idempotencyKey:options.meta.idempotencyKey}});
@@ -33,6 +29,10 @@ export class MaintenanceCommandService {
         if(existing.requestSha256!==sha) throw new ConflictException('IDEMPOTENCY_KEY_REUSED');
         if(existing.status==='COMPLETED'&&existing.responseJson){const stored=existing.responseJson as any;return {body:stored.body as T,etag:String(stored.etag),replayed:true};}
         throw new ConflictException('IDEMPOTENCY_IN_PROGRESS');
+      }
+      if(options.currentUpdatedAt){
+        if(!options.meta.ifMatch) throw new HttpException('PRECONDITION_REQUIRED',428);
+        if(options.meta.ifMatch!==etagForUpdatedAt(options.currentUpdatedAt)) throw new ConflictException('CONCURRENT_MODIFICATION');
       }
       const record=await tx.idempotencyRecord.create({data:{tenantId:ctx.org,actorUserId:ctx.sub,operationScope:options.operationScope,idempotencyKey:options.meta.idempotencyKey,requestSha256:sha,status:'IN_PROGRESS',expiresAt:new Date(Date.now()+86400000),createdBy:ctx.sub,updatedBy:ctx.sub}});
       const result=await work(tx);const etag=etagForUpdatedAt(result.updatedAt);

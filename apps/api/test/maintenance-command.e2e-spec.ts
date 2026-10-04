@@ -44,6 +44,22 @@ describe('Maintenance command infrastructure',()=>{
   await tenant.run(ctx,tx=>tx.client.delete({where:{id}}));
  });
 
+ it('replays a completed idempotent command before re-validating its original ETag',async()=>{
+  const id=randomUUID(), key=`etag-replay-${randomUUID()}`;let calls=0;
+  const created=await tenant.run(ctx,tx=>tx.client.create({data:{id,tenantId:ctx.org,displayName:'ETag Replay',createdBy:ctx.sub,updatedBy:ctx.sub}}));
+  const originalEtag=(await import('../src/maintenance/maintenance-command.service')).etagForUpdatedAt(created.updatedAt);
+  const run=async()=>{
+    const current=await tenant.run(ctx,tx=>tx.client.findUniqueOrThrow({where:{id}}));
+    return commands.execute(ctx,{operationScope:`test.client.${id}.rename`,meta:{idempotencyKey:key,ifMatch:originalEtag,requestId:'etag-replay'},requestBody:{displayName:'Renamed'},currentUpdatedAt:current.updatedAt},async tx=>{
+      calls+=1;const row=await tx.client.update({where:{id},data:{displayName:'Renamed',updatedAt:new Date(created.updatedAt.getTime()+1000),updatedBy:ctx.sub}});
+      return {body:{id:row.id,name:row.displayName},updatedAt:row.updatedAt};
+    });
+  };
+  const first=await run();const replay=await run();
+  expect(first.replayed).toBe(false);expect(replay.replayed).toBe(true);expect(replay.body).toEqual(first.body);expect(calls).toBe(1);
+  await tenant.run(ctx,tx=>tx.client.delete({where:{id}}));
+ });
+
  it('requires a current ETag and rejects stale concurrency tokens',async()=>{
   const current=new Date('2026-10-04T00:00:00.000Z');
   const work=async()=>({body:{ok:true},updatedAt:new Date('2026-10-04T00:00:01.000Z')});
