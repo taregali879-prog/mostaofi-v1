@@ -16,6 +16,7 @@ describe('Hydraulic engineering project persistence & tenant isolation',()=>{
   };
   let calculationId='';
   beforeAll(async()=>{
+    if(process.env.NODE_ENV!=='test') throw new Error('HYDRAULIC_E2E_REQUIRES_DISPOSABLE_TEST_DATABASE');
     const m=await Test.createTestingModule({
       imports:[DatabaseModule,AuditModule],providers:[HydraulicsService]
     }).compile();
@@ -29,17 +30,9 @@ describe('Hydraulic engineering project persistence & tenant isolation',()=>{
         sizeBytes:123n,sha256:'a'.repeat(64),storageKey:'tests/sample.dxf'}}
     }});
   });
-  afterAll(async()=>{
-    await db.hydraulicCalculationVersion.deleteMany({where:{calculation:{projectId}}});
-    await db.hydraulicCalculation.deleteMany({where:{projectId}});
-    await db.auditEvent.deleteMany({where:{organizationId:orgA,entityId:projectId}});
-    await db.documentVersion.deleteMany({where:{documentId:docId}});
-    await db.document.deleteMany({where:{id:docId}});
-    await db.project.deleteMany({where:{id:projectId}});
-    await db.organization.deleteMany({where:{id:{in:[orgA,orgB]}}});
-    await db.user.deleteMany({where:{id:user}});
-    await db.$disconnect();
-  });
+  // The audit log is append-only by design. CI must use a disposable database;
+  // never disable the immutable-audit trigger to clean up test fixtures.
+  afterAll(async()=>{ await db.$disconnect(); });
   it('saves a version tied to a completed project drawing',async()=>{
     const item=await service.create(ctxA,projectId,{title:'Hydraulic 1',documentVersionId:versionId,
       sourceSha256:'a'.repeat(64),input});
