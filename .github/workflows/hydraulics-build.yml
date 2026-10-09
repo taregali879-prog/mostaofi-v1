@@ -28,6 +28,7 @@ jobs:
           --health-cmd "pg_isready -U muqawil -d muqawil_partner"
           --health-interval 5s --health-timeout 5s --health-retries 12
     env:
+      NODE_ENV: test
       DATABASE_URL: postgresql://muqawil:muqawil@localhost:5432/muqawil_partner
       JWT_ACCESS_SECRET: ci-test-secret
       JWT_REFRESH_SECRET: ci-test-refresh
