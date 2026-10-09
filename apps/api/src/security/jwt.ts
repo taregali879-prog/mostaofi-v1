@@ -7,6 +7,7 @@ export interface JwtClaims {
   email: string;
   typ: 'access' | 'refresh';
   jti: string;
+  ver?: number;
   iat: number;
   exp: number;
 }
