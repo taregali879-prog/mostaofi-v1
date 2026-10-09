@@ -1,0 +1,13 @@
+import { AuthService } from '../src/auth/auth.service';
+import { verifyPassword } from '../src/security/password';
+describe('gated registration',()=>{
+ const input={email:'owner@mostaofi.sa',displayName:'Owner',organizationName:'Mostaofi',password:'Long-test-password-123'};
+ let db:any,service:AuthService;
+ beforeEach(()=>{process.env.MOSTAOFI_REGISTRATION_KEY='test-key';process.env.MOSTAOFI_REGISTRATION_EMAILS=input.email;db={user:{findUnique:jest.fn().mockResolvedValue(null),create:jest.fn()},organization:{create:jest.fn()},membership:{create:jest.fn()},$transaction:jest.fn(async cb=>cb(db))};service=new AuthService(db,{} as any)});
+ afterAll(()=>{delete process.env.MOSTAOFI_REGISTRATION_KEY;delete process.env.MOSTAOFI_REGISTRATION_EMAILS});
+ it('refuses missing key and non-allowlisted users before writes',async()=>{await expect(service.register(input,'wrong')).rejects.toThrow('REGISTRATION_NOT_AUTHORIZED');await expect(service.register({...input,email:'other@mostaofi.sa'},'test-key')).rejects.toThrow('REGISTRATION_NOT_AUTHORIZED');expect(db.$transaction).not.toHaveBeenCalled()});
+ it('validates password before writes',async()=>{await expect(service.register({...input,password:'short'},'test-key')).rejects.toThrow('INVALID_REGISTRATION');expect(db.$transaction).not.toHaveBeenCalled()});
+ it('creates organization, salted password and membership in one transaction',async()=>{expect(await service.register({...input,email:' OWNER@MOSTAOFI.SA '},'test-key')).toEqual({created:true,email:input.email});expect(db.$transaction).toHaveBeenCalledTimes(1);const user=db.user.create.mock.calls[0][0].data;const org=db.organization.create.mock.calls[0][0].data;const membership=db.membership.create.mock.calls[0][0].data;expect(user.passwordHash).not.toContain(input.password);expect(verifyPassword(input.password,user.passwordHash)).toBe(true);expect(membership).toMatchObject({userId:user.id,organizationId:org.id,roles:['ORG_ADMIN','CONTRACTOR_ADMIN']})});
+ it('rejects existing users and concurrent duplicate registration',async()=>{db.user.findUnique.mockResolvedValue({id:'existing'});await expect(service.register(input,'test-key')).rejects.toThrow('ACCOUNT_ALREADY_EXISTS');expect(db.$transaction).not.toHaveBeenCalled();db.user.findUnique.mockResolvedValue(null);db.$transaction.mockRejectedValue({code:'P2002'});await expect(service.register(input,'test-key')).rejects.toThrow('ACCOUNT_ALREADY_EXISTS')});
+ it('does not report success if transaction fails',async()=>{db.$transaction.mockRejectedValue(new Error('write failed'));await expect(service.register(input,'test-key')).rejects.toThrow('write failed')});
+});

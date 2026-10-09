@@ -1,14 +1,35 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createHash, randomUUID } from 'crypto';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { signJwt, verifyJwt } from '../security/jwt';
-import { verifyPassword } from '../security/password';
+import { hashPassword, verifyPassword } from '../security/password';
 import { AuditService } from '../audit/audit.service';
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
 @Injectable()
 export class AuthService {
   constructor(private db:PrismaService, private audit:AuditService){}
+  async register(input:any,registrationKey:string){
+    const configured=process.env.MOSTAOFI_REGISTRATION_KEY;
+    const actual=hash(String(registrationKey??'')),expected=hash(String(configured??''));
+    if(!configured||!timingSafeEqual(Buffer.from(actual),Buffer.from(expected)))throw new UnauthorizedException('REGISTRATION_NOT_AUTHORIZED');
+    const email=String(input.email??'').trim().toLowerCase(),displayName=String(input.displayName??'').trim(),organizationName=String(input.organizationName??'').trim(),password=String(input.password??'');
+    const allowed=(process.env.MOSTAOFI_REGISTRATION_EMAILS??'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+    if(!allowed.includes(email))throw new UnauthorizedException('REGISTRATION_NOT_AUTHORIZED');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||displayName.length<2||displayName.length>100||organizationName.length<2||organizationName.length>150||password.length<12||password.length>128)throw new BadRequestException('INVALID_REGISTRATION');
+    if(await this.db.user.findUnique({where:{email}}))throw new ConflictException('ACCOUNT_ALREADY_EXISTS');
+    const userId=randomUUID(),organizationId=randomUUID(),passwordHash=hashPassword(password);
+    try { await this.db.$transaction(async tx=>{
+      await tx.organization.create({data:{id:organizationId,name:organizationName}});
+      await tx.user.create({data:{id:userId,email,displayName,passwordHash}});
+      await tx.membership.create({data:{id:randomUUID(),userId,organizationId,roles:['ORG_ADMIN','CONTRACTOR_ADMIN']}});
+    });
+    } catch(error:any) { if(error?.code==='P2002')throw new ConflictException('ACCOUNT_ALREADY_EXISTS'); throw error; }
+    return {created:true,email};
+  }
   async login(email:string,password:string,requestId='login'){
+    if(typeof email!=='string'||typeof password!=='string'||email.length>254||password.length>128)throw new UnauthorizedException('INVALID_CREDENTIALS');
+    email=email.trim().toLowerCase();
+    if(process.env.NODE_ENV==='production'&&(/@(partner\.local|example\.test)$/.test(email)))throw new UnauthorizedException('INVALID_CREDENTIALS');
     const user=await this.db.user.findUnique({where:{email},include:{memberships:true}});
     if(!user || !verifyPassword(password,user.passwordHash) || !user.memberships[0]) throw new UnauthorizedException('INVALID_CREDENTIALS');
     const m=user.memberships[0], jti=randomUUID();
