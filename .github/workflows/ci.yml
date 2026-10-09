@@ -64,6 +64,8 @@ jobs:
         run: npm run test:local
       - name: Prisma generate
         run: npm run db:generate
+      - name: Hydraulic engine unit tests
+        run: npm --workspace apps/api run test -- --runInBand hydraulics.engine.spec.ts
       - name: Apply migrations
         run: npm run db:migrate
       - name: Seed database
