@@ -14,6 +14,8 @@ export default function HydraulicsProjectPage(){
   const params=useParams<{id:string}>();
   const projectId=params.id;
   const [docs,setDocs]=useState<Document[]>([]);
+  const [drawingFile,setDrawingFile]=useState<File|null>(null);
+  const [drawingTitle,setDrawingTitle]=useState('مخطط مكافحة الحريق');
   const [calculations,setCalculations]=useState<Calculation[]>([]);
   const [documentVersionId,setDocumentVersionId]=useState('');
   const [selectedCalculation,setSelectedCalculation]=useState('');
@@ -58,6 +60,31 @@ export default function HydraulicsProjectPage(){
   }
   function addManual(){
     setRows(prev=>[...prev,{...initial,id:`MANUAL-${Date.now()}`,layer:'MANUAL',kind:'LINE'}]);
+  }
+  async function uploadDrawing(){
+    if(!drawingFile){setMessage('اختر ملف DXF أو PDF أولًا');return;}
+    if(!/\\.(dxf|pdf)$/i.test(drawingFile.name) || drawingFile.size<=0 || drawingFile.size>15*1024*1024){
+      setMessage('الصيغ المسموحة DXF/PDF بحجم لا يتجاوز 15MB');return;
+    }
+    setBusy(true);setMessage('');
+    try{
+      const mimeType=drawingFile.name.toLowerCase().endsWith('.pdf')?'application/pdf':'application/dxf';
+      const intent=await apiFetch<{documentId:string;version:number;uploadUrl:string;headers:Record<string,string>}>(
+        `/projects/${projectId}/documents/upload-intent`,{
+          method:'POST',body:JSON.stringify({fileName:drawingFile.name,mimeType,sizeBytes:drawingFile.size,
+            type:'FIRE_DRAWING',title:drawingTitle.trim()||drawingFile.name})
+        });
+      const put=await fetch(intent.uploadUrl,{method:'PUT',headers:intent.headers,body:drawingFile});
+      if(!put.ok)throw new Error(`فشل الرفع إلى مخزن الملفات: HTTP ${put.status}`);
+      const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await drawingFile.arrayBuffer())),
+        x=>x.toString(16).padStart(2,'0')).join('');
+      await apiFetch(`/documents/${intent.documentId}/complete`,{
+        method:'POST',body:JSON.stringify({version:intent.version,sha256:hash})
+      });
+      await refresh();
+      setMessage('رُفع المخطط وربط بإصدار موثق. اختر إصداره من القائمة.');
+    }catch(e:any){setMessage(e.message??'تعذر رفع المخطط');}
+    finally{setBusy(false);}
   }
   async function importDxf(file:File|null){
     setWarnings([]);setExtracted(false);setFileHash('');
@@ -127,8 +154,14 @@ export default function HydraulicsProjectPage(){
     <div className="card" style={{borderColor:'#b91c1c',background:'#fff7ed'}}><strong>{statusText}</strong><p>تقرير استرشادي للمسار المختار؛ لا يعتمد شبكة متفرعة أو أجهزة بدون مراجعة هندسية وتحليل كامل.</p></div>
     {message&&<p role="status" className="card">{message}</p>}
     <div className="card"><h2>1. ربط الحساب بالمشروع وإصدار المخطط</h2>
+      <details><summary>رفع مخطط جديد إلى مستندات المشروع</summary>
+        <label>عنوان المخطط<input className="field" value={drawingTitle} onChange={e=>setDrawingTitle(e.target.value)}/></label>
+        <input type="file" accept=".dxf,.pdf" onChange={e=>setDrawingFile(e.target.files?.[0]??null)}/>
+        <p className="muted">يتطلب الرفع تهيئة S3 وCORS الصالحة؛ لن تُحفظ البصمة قبل اكتمال النقل.</p>
+        <button className="btn" type="button" disabled={busy||!drawingFile} onClick={()=>void uploadDrawing()}>رفع المخطط وحفظه</button>
+      </details>
       <label>المخطط المحفوظ في المشروع
-        <select className="field" value={documentVersionId} onChange={e=>{setDocumentVersionId(e.target.value);setExtracted(false);setFileHash('');}}>
+        <select className="field" value={documentVersionId} onChange={e=>{setDocumentVersionId(e.target.value);setExtracted(false);setFileHash('');setRows([{...initial}]);setWarnings([]);}}>
           <option value="">اختر إصدار مستند</option>
           {allVersions.map(v=><option key={v.id} value={v.id}>{v.documentTitle} / {v.fileName} / V{v.version} / {v.status}</option>)}
         </select>
