@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "apps/api/src/hydraulics/**"
+      - "apps/api/jest.config.cjs"
       - "apps/api/test/hydraulics.e2e-spec.ts"
       - "apps/api/src/app.module.ts"
       - "apps/web/app/projects/**"
