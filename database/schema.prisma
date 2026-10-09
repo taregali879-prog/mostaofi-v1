@@ -80,6 +80,7 @@ model Organization {
   documents         Document[]
   boqs              Boq[]
   auditEvents       AuditEvent[]
+  hydraulicCalculations HydraulicCalculation[]
   @@map("organizations")
 }
 
@@ -129,6 +130,7 @@ model Project {
   organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   documents         Document[]
   boqs              Boq[]
+  hydraulicCalculations HydraulicCalculation[]
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
   @@map("projects")
@@ -162,6 +164,7 @@ model DocumentVersion {
   storageKey String   @map("storage_key")
   createdAt  DateTime @default(now()) @map("created_at")
   document   Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  hydraulicCalculationVersions HydraulicCalculationVersion[]
   @@unique([documentId, version])
   @@index([sha256])
   @@map("document_versions")
@@ -1044,4 +1047,37 @@ model DomainEvent {
   updatedBy String? @db.Uuid @map("updated_by")
   @@unique([tenantId,id])
   @@map("domain_event")
+}
+
+model HydraulicCalculation {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid @map("organization_id")
+  projectId      String   @db.Uuid @map("project_id")
+  title          String
+  currentVersion Int      @default(1) @map("current_version")
+  createdBy      String   @db.Uuid @map("created_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  project        Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  versions       HydraulicCalculationVersion[]
+  @@index([organizationId, projectId])
+  @@map("hydraulic_calculations")
+}
+
+model HydraulicCalculationVersion {
+  id                String   @id @db.Uuid
+  calculationId     String   @db.Uuid @map("calculation_id")
+  version           Int
+  documentVersionId String   @db.Uuid @map("document_version_id")
+  sourceSha256      String   @db.Char(64) @map("source_sha256")
+  input             Json
+  result            Json
+  createdBy         String   @db.Uuid @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  calculation       HydraulicCalculation @relation(fields: [calculationId], references: [id], onDelete: Restrict)
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
+  @@unique([calculationId, version])
+  @@index([documentVersionId])
+  @@map("hydraulic_calculation_versions")
 }
