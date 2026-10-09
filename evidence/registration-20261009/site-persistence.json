@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-09T14:58:54Z",
+  "projectId": "3e9701ca-1876-480f-8d4a-2f5e30ce7fda",
+  "checks": [
+    "published invitation endpoint validated owner activation",
+    "authenticated site command saved to live D1",
+    "private R2 file saved and retrieved with identical bytes",
+    "saved D1 state reread after logout and new login",
+    "other organization denied D1 state and R2 file access"
+  ]
+}

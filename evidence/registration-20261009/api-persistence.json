@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-09T14:52:10.731Z",
+  "checks": [
+    "registration without server authorization rejected",
+    "two users and separate organizations created",
+    "duplicate registration rejected",
+    "project saved and reread from independent login session",
+    "other organization cannot read or list project",
+    "real object uploaded and document hash reread; cross-tenant document blocked"
+  ],
+  "projectId": "3e9701ca-1876-480f-8d4a-2f5e30ce7fda",
+  "documentId": "068119be-f117-41c5-9692-fb634354a8e0",
+  "release": {
+    "source": "git",
+    "commitSha": "bd2bd27a84681f86defe2824d1a1dc9925ec0761",
+    "branch": "main",
+    "repo": "mostaofi-v1",
+    "owner": "taregali879-prog"
+  }
+}
