@@ -33,7 +33,7 @@ export class AuthService {
     const user=await this.db.user.findUnique({where:{email},include:{memberships:true}});
     if(!user || !verifyPassword(password,user.passwordHash) || !user.memberships[0]) throw new UnauthorizedException('INVALID_CREDENTIALS');
     const m=user.memberships[0], jti=randomUUID();
-    const base={sub:user.id,org:m.organizationId,roles:m.roles,email:user.email,jti};
+    const base={sub:user.id,org:m.organizationId,roles:m.roles,email:user.email,jti,ver:user.credentialVersion};
     const accessToken=signJwt({...base,typ:'access'},process.env.JWT_ACCESS_SECRET??'dev-only-change-me',900);
     const refreshToken=signJwt({...base,typ:'refresh'},process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me',604800);
     await this.db.authSession.create({data:{id:jti,userId:user.id,organizationId:m.organizationId,refreshTokenHash:hash(refreshToken),expiresAt:new Date(Date.now()+604800000)}});
@@ -43,8 +43,9 @@ export class AuthService {
   async refresh(token:string){
     let c; try{c=verifyJwt(token,process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me','refresh')}catch{throw new UnauthorizedException('INVALID_REFRESH_TOKEN')}
     const s=await this.db.authSession.findUnique({where:{id:c.jti}}); if(!s||s.revokedAt||s.refreshTokenHash!==hash(token)) throw new UnauthorizedException('REFRESH_REVOKED');
+    const user=await this.db.user.findUnique({where:{id:c.sub},select:{credentialVersion:true}});if(!user||(c.ver??0)!==user.credentialVersion)throw new UnauthorizedException('REFRESH_REVOKED');
     await this.db.authSession.update({where:{id:s.id},data:{revokedAt:new Date()}});
-    const jti=randomUUID(), base={sub:c.sub,org:c.org,roles:c.roles,email:c.email,jti};
+    const jti=randomUUID(), base={sub:c.sub,org:c.org,roles:c.roles,email:c.email,jti,ver:user.credentialVersion};
     const accessToken=signJwt({...base,typ:'access'},process.env.JWT_ACCESS_SECRET??'dev-only-change-me',900);
     const refreshToken=signJwt({...base,typ:'refresh'},process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me',604800);
     await this.db.authSession.create({data:{id:jti,userId:c.sub,organizationId:c.org,refreshTokenHash:hash(refreshToken),expiresAt:new Date(Date.now()+604800000)}});
