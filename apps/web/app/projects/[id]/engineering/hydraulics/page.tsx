@@ -135,14 +135,14 @@ export default function HydraulicsProjectPage(){
     }catch(e:any){setMessage(e.message??'فشل الحفظ');}
     finally{setBusy(false);}
   }
-  async function openCalculation(id:string){
+  async function openCalculation(id:string, versionNumber?:number){
     setBusy(true);setMessage('');
     try{
       const c=await apiFetch<Calculation>(`/hydraulics/${id}`);
       setSelectedCalculation(id);setTitle(c.title);
-      const version=c.versions[0];
+      const version=versionNumber?c.versions.find(v=>v.version===versionNumber):c.versions[0];
       setResult(version?.result??null);
-      setMessage(`عرض أحدث إصدار محفوظ: ${version?.version??0}. للتحرير استخدم إدخالات جديدة وسيُحفظ إصدار مستقل.`);
+      setMessage(`عرض الإصدار المحفوظ V${version?.version??0}. التحرير سينشئ إصدارًا جديدًا دون تغيير السابق.`);
     }catch(e:any){setMessage(e.message??'تعذر الاسترجاع');}
     finally{setBusy(false);}
   }
@@ -228,7 +228,7 @@ export default function HydraulicsProjectPage(){
       {calculations.length===0?<p className="muted">لا توجد حسابات محفوظة حتى الآن.</p>:calculations.map(c=>
         <div key={c.id} style={{padding:12,borderBottom:'1px solid #ddd'}}>
           <strong>{c.title}</strong> — الإصدار V{c.currentVersion} <button type="button" className="btn" onClick={()=>{void openCalculation(c.id)}}>عرض المحفوظ</button>
-          <p className="muted">{c.versions.map(v=>`V${v.version} (${new Date(v.createdAt).toLocaleDateString('ar-SA')})`).join(' · ')}</p>
+          <div className="tabs">{c.versions.map(v=><button key={v.id} type="button" className="tab" onClick={()=>void openCalculation(c.id,v.version)}>عرض V{v.version} · {new Date(v.createdAt).toLocaleDateString('ar-SA')}</button>)}</div>
         </div>)}
     </div>
   </div>;
