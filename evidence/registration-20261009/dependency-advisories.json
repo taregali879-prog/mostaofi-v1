@@ -1,0 +1,31 @@
+{
+  "handlebars": {
+    "severity": "critical",
+    "direct": false,
+    "fixAvailable": true
+  },
+  "next": {
+    "severity": "high",
+    "direct": true,
+    "fixAvailable": {
+      "name": "next",
+      "version": "16.4.0",
+      "isSemVerMajor": false
+    }
+  },
+  "proxy-addr": {
+    "severity": "critical",
+    "direct": false,
+    "fixAvailable": true
+  },
+  "sharp": {
+    "severity": "high",
+    "direct": false,
+    "fixAvailable": true
+  },
+  "source-map-js": {
+    "severity": "high",
+    "direct": false,
+    "fixAvailable": true
+  }
+}
