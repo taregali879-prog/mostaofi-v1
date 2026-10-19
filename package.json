@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "validate:repo": "node scripts/validate-repo.mjs",
-    "test:domain": "node --test tests/*.test.mjs",
+    "test:domain": "node --experimental-strip-types --test tests/*.test.mjs",
     "smoke": "node scripts/smoke-contract.mjs",
     "test:local": "npm run validate:repo && npm run test:domain && npm run test:s0 && npm run smoke",
     "dev:api": "npm --workspace apps/api run start:dev",
