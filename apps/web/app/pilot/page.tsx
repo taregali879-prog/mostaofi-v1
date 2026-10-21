@@ -1,12 +1,12 @@
 'use client';
 import {useState} from 'react';
-const API=process.env.NEXT_PUBLIC_API_URL??'http://localhost:4000/api/v1';
+import {apiFetch} from '../../lib/api';
 const supplierId='01900000-0000-7000-8000-000000000401';
 const warehouseId='01900000-0000-7000-8000-000000000301';
 export default function Pilot(){
  const [running,setRunning]=useState(false);const [log,setLog]=useState<string[]>([]);const [kpi,setKpi]=useState<any>(null);
  const add=(s:string)=>setLog(x=>[...x,s]);
- async function api(path:string,method='GET',body?:any){const token=localStorage.getItem('muqawil_access_token');if(!token)throw Error('LOGIN_REQUIRED');const r=await fetch(`${API}${path}`,{method,headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(`${method} ${path}: ${j?.message??r.status}`);return j}
+ async function api(path:string,method='GET',body?:any){if(!localStorage.getItem('muqawil_access_token'))throw Error('LOGIN_REQUIRED');return apiFetch<any>(path,{method,body:body===undefined?undefined:JSON.stringify(body)})}
  async function run(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setRunning(true);setLog([]);setKpi(null);const f=new FormData(e.currentTarget);try{
   const stamp=Date.now();
   const project=await api('/projects','POST',{name:f.get('project'),clientName:f.get('client'),city:f.get('city'),scope:'Fire systems'});add(`✓ Project ${project.id}`);

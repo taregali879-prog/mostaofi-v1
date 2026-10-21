@@ -28,6 +28,23 @@ test('expired access token renews once, stores rotated refresh, and retries auth
   assert.equal(db.get('muqawil_refresh_token'),'new-refresh');
 });
 
+test('a renewed write retries the original payload, method and governed headers once',async()=>{
+  const writes=[];
+  setup(async(url,opts)=>{
+    if(url.endsWith('/auth/refresh'))return json({accessToken:'fresh-access',refreshToken:'new-refresh'});
+    writes.push({method:opts.method,body:opts.body,key:opts.headers.get('Idempotency-Key'),etag:opts.headers.get('If-Match')});
+    return writes.length===1?json({},401):json({created:true},201);
+  });
+  const body=JSON.stringify({name:'Fire systems project'});
+  assert.deepEqual(await api.apiFetch('/projects',{
+    method:'POST',body,headers:{'Idempotency-Key':'project-write-1','If-Match':'"version-1"'},
+  }),{created:true});
+  assert.deepEqual(writes,[
+    {method:'POST',body,key:'project-write-1',etag:'"version-1"'},
+    {method:'POST',body,key:'project-write-1',etag:'"version-1"'},
+  ]);
+});
+
 test('failed renewal clears both old tokens and rejects with SESSION_EXPIRED',async()=>{
   setup(async url=>url.endsWith('/auth/refresh')?json({message:'revoked'},401):json({message:'expired'},401));
   await assert.rejects(api.apiFetch('/projects'),err=>err.status===401 && err.message==='SESSION_EXPIRED');
@@ -51,6 +68,51 @@ test('403 errors do not trigger token refresh',async()=>{
   setup(async(url)=>{if(url.endsWith('/auth/refresh'))renewals++;return json({message:'forbidden'},403)});
   await assert.rejects(api.apiFetch('/projects'),err=>err.status===403);
   assert.equal(renewals,0);
+});
+
+for (const status of [429,503]) {
+  test(`temporary refresh failure (${status}) preserves the session for a later retry`,async()=>{
+    let available=false;
+    setup(async(url,opts)=>{
+      if(url.endsWith('/auth/refresh'))return available
+        ?json({accessToken:'fresh-access',refreshToken:'new-refresh'})
+        :json({message:'try later'},status);
+      return opts.headers.get('authorization')==='Bearer fresh-access'
+        ?json({ok:true}):json({message:'expired'},401);
+    });
+    await assert.rejects(api.apiFetch('/projects'),err=>err.status===status);
+    assert.equal(db.get('muqawil_access_token'),'expired-access');
+    assert.equal(db.get('muqawil_refresh_token'),'active-refresh');
+    available=true;
+    assert.deepEqual(await api.apiFetch('/projects'),{ok:true});
+  });
+}
+
+test('a network failure while refreshing preserves credentials and releases the shared refresh',async()=>{
+  const unavailable=new TypeError('Failed to fetch');
+  setup(async url=>{
+    if(url.endsWith('/auth/refresh'))throw unavailable;
+    return json({message:'expired'},401);
+  });
+  await assert.rejects(api.apiFetch('/projects'),err=>err===unavailable);
+  assert.equal(db.get('muqawil_access_token'),'expired-access');
+  assert.equal(db.get('muqawil_refresh_token'),'active-refresh');
+  global.fetch=async(url,opts)=>url.endsWith('/auth/refresh')
+    ?json({accessToken:'fresh-access',refreshToken:'new-refresh'})
+    :opts.headers.get('authorization')==='Bearer fresh-access'?json({ok:true}):json({},401);
+  assert.deepEqual(await api.apiFetch('/projects'),{ok:true});
+});
+
+test('an aborted retry keeps the rotated session and preserves the abort error',async()=>{
+  const aborted=new DOMException('Request aborted','AbortError');
+  setup(async(url,opts)=>{
+    if(url.endsWith('/auth/refresh'))return json({accessToken:'fresh-access',refreshToken:'new-refresh'});
+    if(opts.headers.get('authorization')==='Bearer fresh-access')throw aborted;
+    return json({message:'expired'},401);
+  });
+  await assert.rejects(api.apiFetch('/projects'),err=>err===aborted);
+  assert.equal(db.get('muqawil_access_token'),'fresh-access');
+  assert.equal(db.get('muqawil_refresh_token'),'new-refresh');
 });
 
 test('a newer login is not erased by a delayed, rejected refresh from an old session',async()=>{
