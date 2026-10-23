@@ -14,9 +14,10 @@ import { InventoryModule } from './inventory/inventory.module';
 import { KpiModule } from './kpi/kpi.module';
 import { SystemModule } from './system/system.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { HydraulicsModule } from './hydraulics/hydraulics.module';
 import { JwtAuthGuard } from './security/jwt-auth.guard';
 import { RolesGuard } from './security/roles.guard';
 @Module({
- imports:[DatabaseModule,StorageModule,AuditModule,AuthModule,ContractorsModule,ProjectsModule,DocumentsModule,BoqModule,ProcurementModule,DeliveryModule,InventoryModule,KpiModule,SystemModule,MaintenanceModule],
+ imports:[DatabaseModule,StorageModule,AuditModule,AuthModule,ContractorsModule,ProjectsModule,DocumentsModule,BoqModule,ProcurementModule,DeliveryModule,InventoryModule,KpiModule,SystemModule,MaintenanceModule,HydraulicsModule],
  providers:[{provide:APP_GUARD,useClass:JwtAuthGuard},{provide:APP_GUARD,useClass:RolesGuard}],
 }) export class AppModule{}

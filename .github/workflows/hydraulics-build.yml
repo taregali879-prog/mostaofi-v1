@@ -1,0 +1,47 @@
+name: Hydraulic module validation (independent of security gate)
+on:
+  pull_request:
+    paths:
+      - "apps/api/src/hydraulics/**"
+      - "apps/api/jest.config.cjs"
+      - "apps/api/test/hydraulics.e2e-spec.ts"
+      - "apps/api/src/app.module.ts"
+      - "apps/web/app/projects/**"
+      - "apps/web/lib/hydraulics-dxf.ts"
+      - "database/**"
+      - ".github/workflows/hydraulics-build.yml"
+permissions:
+  contents: read
+jobs:
+  hydraulics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: muqawil
+          POSTGRES_PASSWORD: muqawil
+          POSTGRES_DB: muqawil_partner
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U muqawil -d muqawil_partner"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://muqawil:muqawil@localhost:5432/muqawil_partner
+      JWT_ACCESS_SECRET: ci-test-secret
+      JWT_REFRESH_SECRET: ci-test-refresh
+      WEB_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --fund=false
+      - run: npm run db:generate
+      - run: npm --workspace apps/api run test -- --runInBand hydraulics.engine.spec.ts
+      - run: npm run db:migrate
+      - run: npm --workspace apps/api run test:e2e -- --runInBand hydraulics.e2e-spec.ts
+      - run: npm run build
