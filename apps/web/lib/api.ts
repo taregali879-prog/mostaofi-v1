@@ -24,7 +24,8 @@ async function refreshSession():Promise<string>{
         method:'POST',headers:{'content-type':'application/json'},
         body:JSON.stringify({refreshToken:oldRefresh}),cache:'no-store',credentials:'omit',
       });
-      if(!response.ok)throw new ApiError(401,'SESSION_EXPIRED');
+      if(!response.ok)throw new ApiError(response.status,
+        response.status===401||response.status===403?'SESSION_EXPIRED':'SESSION_REFRESH_UNAVAILABLE');
       const payload=await response.json();
       if(typeof payload?.accessToken!=='string'||!payload.accessToken||typeof payload?.refreshToken!=='string'||!payload.refreshToken)
         throw new ApiError(401,'SESSION_EXPIRED');
@@ -56,7 +57,9 @@ export async function apiFetch<T>(path:string,init:RequestInit={}):Promise<T>{
       retryAccess=next;
       response=await send(next);
       if(response.status===401)throw new ApiError(401,'SESSION_EXPIRED');
-    }catch{
+    }catch(error){
+      // Connectivity, cancellation and temporary server failures do not revoke a session.
+      if(!(error instanceof ApiError)||error.message!=='SESSION_EXPIRED')throw error;
       const current=localStorage.getItem(ACCESS_TOKEN);
       if(current===token || (retryAccess!==null && current===retryAccess))clearSession();
       throw new ApiError(401,'SESSION_EXPIRED');
