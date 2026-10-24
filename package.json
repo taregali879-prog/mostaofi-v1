@@ -25,16 +25,36 @@
     "governance:implementation-gates": "node scripts/evaluate-implementation-gates.mjs",
     "test:s0": "node --test tests/v1.1/*.test.mjs",
     "governance:s0-acceptance": "node scripts/evaluate-s0-acceptance.mjs",
-    "launch:local": "node scripts/start-local.mjs"
+    "launch:local": "node scripts/start-local.mjs",
+    "setup:audit": "node scripts/setup-audit.mjs",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "npm --workspace packages/contracts run build && tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit --incremental false -p apps/web/tsconfig.json",
+    "deps:check": "node scripts/check-dependency-tree.mjs",
+    "test:coverage": "npm run test:e2e -- --runInBand --coverage",
+    "audit:local": "node scripts/run-review.mjs",
+    "audit:full": "node scripts/run-review.mjs --full",
+    "audit:container": "bash scripts/audit-container.sh"
   },
   "engines": {
-    "node": ">=22"
+    "node": "^22.22.2 || ^24.19.0"
   },
   "devDependencies": {
     "@redocly/cli": "2.57.0",
-    "deepmerge-ts": "8.0.0"
+    "eslint": "10.13.0",
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.72.0",
+    "typescript": "5.9.3"
   },
   "overrides": {
-    "deepmerge-ts": "$deepmerge-ts"
-  }
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.0"
+    },
+    "@nestjs/platform-express": {
+      "multer": "2.5.0"
+    },
+    "@nestjs/cli": {
+      "webpack": "5.112.2"
+    }
+  },
+  "packageManager": "npm@12.2.1"
 }
