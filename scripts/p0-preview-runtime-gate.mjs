@@ -57,7 +57,7 @@ async function waitReady(base) {
     try {
       const response = await fetch(`${base}/api/v1/health/ready`);
       if (response.ok) return;
-    } catch {}
+    } catch { /* Retry readiness or continue best-effort object cleanup. */ }
     await sleep(500);
   }
   throw new Error('PREVIEW_API_NOT_READY');
@@ -147,7 +147,7 @@ async function cleanup(state, s3) {
     try {
       const del = presignS3Request({ ...s3, method: 'DELETE', key: state.objectKey });
       await fetch(del.url, { method: 'DELETE' });
-    } catch {}
+    } catch { /* Retry readiness or continue best-effort object cleanup. */ }
   }
   if (state.documentId) {
     await db.documentVersion.deleteMany({ where: { documentId: state.documentId } });

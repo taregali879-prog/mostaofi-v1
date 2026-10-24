@@ -1,0 +1,44 @@
+rules:
+  - id: no-eval-in-application
+    languages: [typescript, javascript]
+    message: Dynamic code execution must not accept runtime data.
+    severity: ERROR
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+    paths:
+      include: [/apps/]
+  - id: no-unsafe-sql-in-application
+    languages: [typescript, javascript]
+    message: Use parameterized Prisma tagged templates instead of unsafe SQL methods.
+    severity: ERROR
+    pattern-either:
+      - pattern: $DB.$queryRawUnsafe(...)
+      - pattern: $DB.$executeRawUnsafe(...)
+    paths:
+      include: [/apps/api/src/]
+  - id: no-shell-in-application
+    languages: [typescript, javascript]
+    message: Application code must not invoke a shell.
+    severity: ERROR
+    pattern-either:
+      - pattern: exec(...)
+      - pattern: execSync(...)
+      - pattern: 'spawn($CMD, $ARGS, { ..., shell: true, ... })'
+    paths:
+      include: [/apps/api/src/]
+  - id: no-disabled-tls-validation
+    languages: [typescript, javascript]
+    message: TLS certificate validation must remain enabled.
+    severity: ERROR
+    pattern: '{ ..., rejectUnauthorized: false, ... }'
+  - id: no-unescaped-html
+    languages: [typescript, javascript]
+    message: Review and sanitize raw HTML before rendering it.
+    severity: ERROR
+    pattern: <$TAG dangerouslySetInnerHTML={$HTML} ... />
+  - id: private-key-in-source
+    languages: [generic]
+    message: Private key material must not be stored in the repository.
+    severity: ERROR
+    pattern-regex: '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'

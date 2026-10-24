@@ -17,6 +17,6 @@ test('CI, release, and preflight use pinned S3-compatible SeaweedFS, not removed
 
 test('production still fails closed on required S3 configuration', () => {
   for (const name of ['S3_ENDPOINT', 'S3_BUCKET', 'S3_ACCESS_KEY', 'S3_SECRET_KEY']) {
-    assert.match(productionConfig, new RegExp(`['\"]${name}['\"]`));
+    assert.match(productionConfig, new RegExp(`['"]${name}['"]`));
   }
 });

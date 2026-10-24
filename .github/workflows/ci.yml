@@ -41,7 +41,7 @@ jobs:
         run: test -f package-lock.json || { echo 'Run Bootstrap npm lockfile workflow first.'; exit 2; }
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.19.0
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Ensure PostgreSQL client
@@ -56,20 +56,36 @@ jobs:
             sleep 2
           done
           curl -sS --connect-timeout 2 -o /dev/null "$S3_ENDPOINT/"
+      - name: Pin npm workspace resolver
+        run: npm install --global npm@12.2.1
       - name: Install dependencies
-        run: npm ci --no-audit --fund=false
+        run: npm ci --ignore-scripts --no-audit --fund=false
+      - name: Validate dependency tree
+        run: npm run deps:check
       - name: Dependency security gate
         run: npm audit --audit-level=high
       - name: Local validation
         run: npm run test:local
       - name: Prisma generate
         run: npm run db:generate
+      - name: Lint and TypeScript checks
+        run: npm run lint && npm run typecheck
+      - name: Evidence tooling tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Static security scan
+        run: |
+          python -m pip install -r requirements-audit.txt
+          mkdir -p .audit-output
+          semgrep scan --config .semgrep.yml --metrics=off --disable-version-check --error --json > .audit-output/semgrep.json
       - name: Apply migrations
         run: npm run db:migrate
       - name: Seed database
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/seed.sql
       - name: Full MVP HTTP E2E
-        run: npm run test:e2e
+        run: npm run test:coverage
       - name: Build API and Web
         run: npm run build
       - name: Start API for smoke/performance
@@ -103,6 +119,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-evidence-${{ github.sha }}
-          path: evidence/runtime
+          path: |
+            evidence/runtime
+            apps/api/coverage
+            .audit-output
           if-no-files-found: warn
           retention-days: 30

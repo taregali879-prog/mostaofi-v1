@@ -12,3 +12,7 @@ uploads
 *.log
 
 .local-launch/
+
+.audit-output/
+.audit-tools/
+*.tsbuildinfo

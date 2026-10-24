@@ -12,12 +12,22 @@
 - Object Storage: S3-compatible / MinIO محليًا
 - CI: GitHub Actions
 
-## تشغيل البيئة
-1. انسخ `.env.example` إلى `.env`.
-2. شغّل `docker compose up -d`.
-3. نفّذ `npm install` في بيئة لديها اتصال بمستودع npm.
-4. طبّق migration من `database/migrations/0001_initial/migration.sql` ثم `database/seed.sql`، أو حوّلها لاحقًا إلى Prisma migrations عند تثبيت Prisma.
-5. شغّل API وWeb بأوامر npm.
+## التشغيل والتدقيق الآلي
+
+اتبع [دليل التشغيل والتدقيق](docs/AUTOMATED_REVIEW_AR.md). البداية:
+
+```bash
+nvm use
+npx --yes npm@12.2.1 run setup:audit
+```
+
+للاختبار الكامل على خدمات مؤقتة ومعزولة:
+
+```bash
+docker compose -f docker-compose.audit.yml up --build --abort-on-container-exit --exit-code-from audit
+```
+
+تظهر السجلات والتغطية في `.audit-output/`. إعداد الحاوية ليس اعتمادًا للإنتاج؛ تبقى بوابات S1 والإصدار والتشغيل منفصلة.
 
 ## تحقق بدون تبعيات خارجية
 ```bash

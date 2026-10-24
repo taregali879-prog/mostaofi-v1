@@ -41,27 +41,27 @@ describe('Mostaofi v1.1 maintenance vertical acceptance',()=>{
   const activated=await command(adminToken,`/api/v1/maintenance/contracts/${contract.body.id}/activate`,`accept-activate-${runId}`,contractEtag).expect(200);contractEtag=activated.headers.etag as string;expect(activated.body.status).toBe('ACTIVE');
 
   const visit=await command(adminToken,`/api/v1/maintenance/contracts/${contract.body.id}/visits`,`accept-visit-${runId}`,contractEtag,{siteId:MAINT_FIXTURE.siteA,visitKind:'PLANNED_MAINTENANCE',scheduledStart:'2026-10-10T08:00:00Z',scheduledEnd:'2026-10-10T10:00:00Z'}).expect(201);
-  let visitState=await api(adminToken,`/api/v1/maintenance/visits/${visit.body.id}`).expect(200),visitEtag=visitState.headers.etag as string;
+  const visitState=await api(adminToken,`/api/v1/maintenance/visits/${visit.body.id}`).expect(200);let visitEtag=visitState.headers.etag as string;
   for(const [action,status] of [['schedule','SCHEDULED'],['confirm','CONFIRMED'],['arrive','ARRIVED'],['start','IN_PROGRESS']] as const){const r=await command(adminToken,`/api/v1/maintenance/visits/${visit.body.id}/${action}`,`accept-visit-${action}-${runId}`,visitEtag).expect(200);visitEtag=r.headers.etag as string;expect(r.body.status).toBe(status)}
 
   const wo=await command(adminToken,`/api/v1/maintenance/visits/${visit.body.id}/work-orders`,`accept-wo-${runId}`,visitEtag,{serviceType:'PREVENTIVE',priority:'HIGH',scheduledStart:'2026-10-10T08:30:00Z',slaDeadline:'2026-10-10T12:00:00Z'}).expect(201);
-  let woState=await api(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}`).expect(200),woEtag=woState.headers.etag as string;
+  const woState=await api(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}`).expect(200);let woEtag=woState.headers.etag as string;
   const assignment=await command(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}/assignments`,`accept-assignment-${runId}`,woEtag,{technicianId:technician.body.id,role:'LEAD_TECHNICIAN'}).expect(201);woEtag=assignment.headers.etag as string;
   const accepted=await command(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}/assignments/${assignment.body.id}/accept`,`accept-assignment-accept-${runId}`,woEtag).expect(200);woEtag=accepted.headers.etag as string;
   const arrived=await command(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}/arrive`,`accept-wo-arrive-${runId}`,woEtag).expect(200);woEtag=arrived.headers.etag as string;
   const started=await command(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}/start`,`accept-wo-start-${runId}`,woEtag).expect(200);expect(started.body.status).toBe('IN_PROGRESS');
   woEtag=started.headers.etag as string;
-  const template=await api(adminToken,'/api/v1/maintenance/inspection-templates','post').set('Idempotency-Key',`accept-template-${runId}`).send({name:`Acceptance Template ${runId}`,serviceType:'PREVENTIVE'}).expect(201);let templateEtag=template.headers.etag as string;
+  const template=await api(adminToken,'/api/v1/maintenance/inspection-templates','post').set('Idempotency-Key',`accept-template-${runId}`).send({name:`Acceptance Template ${runId}`,serviceType:'PREVENTIVE'}).expect(201);const templateEtag=template.headers.etag as string;
   const version=await command(adminToken,`/api/v1/maintenance/inspection-templates/${template.body.id}/versions`,`accept-version-${runId}`,templateEtag,{effectiveFrom:'2026-10-04'}).expect(201);
   let versionState=await api(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}`).expect(200),versionEtag=versionState.headers.etag as string;
-  const section=await command(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}/sections`,`accept-section-${runId}`,versionEtag,{title:'Fire Alarm',displayOrder:1}).expect(201);let sectionEtag=section.headers.etag as string;
+  const section=await command(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}/sections`,`accept-section-${runId}`,versionEtag,{title:'Fire Alarm',displayOrder:1}).expect(201);const sectionEtag=section.headers.etag as string;
   const item=await command(adminToken,`/api/v1/maintenance/inspection-sections/${section.body.id}/items`,`accept-item-${runId}`,sectionEtag,{code:'FA-ACCEPT-001',question:'Detector operational?',answerType:'PASS_FAIL',required:true,requiresEvidenceOnFail:false,displayOrder:1}).expect(201);
   versionState=await api(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}`).expect(200);versionEtag=versionState.headers.etag as string;
   const review=await command(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}/submit-review`,`accept-review-${runId}`,versionEtag).expect(200);versionEtag=review.headers.etag as string;
   const published=await command(adminToken,`/api/v1/maintenance/inspection-template-versions/${version.body.id}/publish`,`accept-publish-${runId}`,versionEtag).expect(200);expect(published.body.status).toBe('PUBLISHED');
 
   const inspection=await command(adminToken,`/api/v1/maintenance/work-orders/${wo.body.id}/inspections`,`accept-inspection-${runId}`,woEtag,{templateVersionId:version.body.id,performedBy:technician.body.id}).expect(201);
-  let inspectionState=await api(adminToken,`/api/v1/maintenance/inspections/${inspection.body.id}`).expect(200),inspectionEtag=inspectionState.headers.etag as string;
+  const inspectionState=await api(adminToken,`/api/v1/maintenance/inspections/${inspection.body.id}`).expect(200);let inspectionEtag=inspectionState.headers.etag as string;
   const inspectionStarted=await command(adminToken,`/api/v1/maintenance/inspections/${inspection.body.id}/start`,`accept-inspection-start-${runId}`,inspectionEtag).expect(200);inspectionEtag=inspectionStarted.headers.etag as string;
   const answer=await api(adminToken,`/api/v1/maintenance/inspections/${inspection.body.id}/answers/${item.body.id}`,'put').set('Idempotency-Key',`accept-answer-${runId}`).set('If-Match',inspectionEtag).send({answerBoolean:false,result:'FAIL',recordedAt:new Date().toISOString()}).expect(200);inspectionEtag=answer.headers.etag as string;
   const inspectionCompleted=await command(adminToken,`/api/v1/maintenance/inspections/${inspection.body.id}/complete`,`accept-inspection-complete-${runId}`,inspectionEtag).expect(200);inspectionEtag=inspectionCompleted.headers.etag as string;expect(inspectionCompleted.body.status).toBe('COMPLETED');
