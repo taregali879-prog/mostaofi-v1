@@ -1,0 +1,17 @@
+FROM node:24.19.0-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv postgresql-client ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install --global npm@12.2.1 \
+    && python3 -m venv /opt/audit-tools
+ENV PATH="/opt/audit-tools/bin:${PATH}" NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+COPY requirements-audit.txt ./
+RUN pip install --no-cache-dir -r requirements-audit.txt
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+RUN npm ci --ignore-scripts --no-audit --fund=false
+COPY . .
+RUN npm run db:generate
+CMD ["npm", "run", "audit:container"]

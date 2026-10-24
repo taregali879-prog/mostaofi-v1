@@ -8,8 +8,8 @@ const TTL=15*60*1000;
 const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
 const validToken=(token:unknown):token is string=>typeof token==='string'&&/^[A-Za-z0-9_-]{43}$/.test(token);
 const key=()=>createHash('sha256').update('mostaofi:recovery-mail:v1:'+process.env.JWT_REFRESH_SECRET).digest();
-export function sealRecoveryMail(value:unknown){const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key(),iv);const encrypted=Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]);return [iv,cipher.getAuthTag(),encrypted].map(x=>x.toString('base64url')).join('.')}
-export function openRecoveryMail(value:string){const [iv,tag,data]=value.split('.').map(x=>Buffer.from(x,'base64url'));const cipher=createDecipheriv('aes-256-gcm',key(),iv);cipher.setAuthTag(tag);return JSON.parse(Buffer.concat([cipher.update(data),cipher.final()]).toString('utf8'))}
+export function sealRecoveryMail(value:unknown){const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key(),iv,{authTagLength:16});const encrypted=Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]);return [iv,cipher.getAuthTag(),encrypted].map(x=>x.toString('base64url')).join('.')}
+export function openRecoveryMail(value:string){const [iv,tag,data]=value.split('.').map(x=>Buffer.from(x,'base64url'));const cipher=createDecipheriv('aes-256-gcm',key(),iv,{authTagLength:16});cipher.setAuthTag(tag);return JSON.parse(Buffer.concat([cipher.update(data),cipher.final()]).toString('utf8'))}
 
 @Injectable()
 export class PasswordRecoveryService implements OnModuleInit,OnModuleDestroy {

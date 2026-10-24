@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.git
+**/.next
+**/dist
+**/coverage
+.env
+.env.*
+!.env.example
+.audit-output
+.audit-tools
+.local-launch
+*.log

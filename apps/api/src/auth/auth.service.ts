@@ -41,15 +41,26 @@ export class AuthService {
     return {accessToken,refreshToken,user:{id:user.id,organizationId:m.organizationId,email:user.email,displayName:user.displayName,roles:m.roles}};
   }
   async refresh(token:string){
-    let c; try{c=verifyJwt(token,process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me','refresh')}catch{throw new UnauthorizedException('INVALID_REFRESH_TOKEN')}
-    const s=await this.db.authSession.findUnique({where:{id:c.jti}}); if(!s||s.revokedAt||s.refreshTokenHash!==hash(token)) throw new UnauthorizedException('REFRESH_REVOKED');
-    const user=await this.db.user.findUnique({where:{id:c.sub},select:{credentialVersion:true}});if(!user||(c.ver??0)!==user.credentialVersion)throw new UnauthorizedException('REFRESH_REVOKED');
-    await this.db.authSession.update({where:{id:s.id},data:{revokedAt:new Date()}});
-    const jti=randomUUID(), base={sub:c.sub,org:c.org,roles:c.roles,email:c.email,jti,ver:user.credentialVersion};
-    const accessToken=signJwt({...base,typ:'access'},process.env.JWT_ACCESS_SECRET??'dev-only-change-me',900);
-    const refreshToken=signJwt({...base,typ:'refresh'},process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me',604800);
-    await this.db.authSession.create({data:{id:jti,userId:c.sub,organizationId:c.org,refreshTokenHash:hash(refreshToken),expiresAt:new Date(Date.now()+604800000)}});
-    return {accessToken,refreshToken};
+    let c;
+    try { c=verifyJwt(token,process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me','refresh'); }
+    catch { throw new UnauthorizedException('INVALID_REFRESH_TOKEN'); }
+    return this.db.$transaction(async tx=>{
+      // Password resets use the same user lock; rotation must not race a credential change.
+      await tx.$queryRaw`SELECT id FROM users WHERE id=${c.sub}::uuid FOR UPDATE`;
+      const user=await tx.user.findUnique({where:{id:c.sub},select:{email:true,credentialVersion:true}});
+      if(!user||(c.ver??0)!==user.credentialVersion)throw new UnauthorizedException('REFRESH_REVOKED');
+      const membership=await tx.membership.findUnique({where:{userId_organizationId:{userId:c.sub,organizationId:c.org}}});
+      if(!membership)throw new UnauthorizedException('REFRESH_REVOKED');
+      const now=new Date();
+      const consumed=await tx.authSession.updateMany({where:{id:c.jti,userId:c.sub,organizationId:c.org,
+        refreshTokenHash:hash(token),revokedAt:null,expiresAt:{gt:now}},data:{revokedAt:now}});
+      if(consumed.count!==1)throw new UnauthorizedException('REFRESH_REVOKED');
+      const jti=randomUUID(),base={sub:c.sub,org:c.org,roles:membership.roles,email:user.email,jti,ver:user.credentialVersion};
+      const accessToken=signJwt({...base,typ:'access'},process.env.JWT_ACCESS_SECRET??'dev-only-change-me',900);
+      const refreshToken=signJwt({...base,typ:'refresh'},process.env.JWT_REFRESH_SECRET??'dev-refresh-change-me',604800);
+      await tx.authSession.create({data:{id:jti,userId:c.sub,organizationId:c.org,refreshTokenHash:hash(refreshToken),expiresAt:new Date(now.getTime()+604800000)}});
+      return {accessToken,refreshToken};
+    });
   }
   async me(c:any){const u=await this.db.user.findUnique({where:{id:c.sub}}); if(!u) throw new UnauthorizedException(); return {id:u.id,organizationId:c.org,email:u.email,displayName:u.displayName,roles:c.roles}}
 }
