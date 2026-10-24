@@ -73,4 +73,10 @@ describe('secure password recovery',()=>{
    await service.deliverPending();expect(mailer.send).toHaveBeenCalledTimes(1);
   }finally{await pg.close()}
  },20000);
+ it('rejects a recovery-mail payload with a truncated GCM authentication tag',()=>{
+  const parts=sealRecoveryMail({email:'owner@test.invalid'}).split('.');
+  parts[1]=Buffer.from(parts[1],'base64url').subarray(0,4).toString('base64url');
+  expect(()=>openRecoveryMail(parts.join('.'))).toThrow();
+ });
+
 });
